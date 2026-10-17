@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure API Management for Developers &middot; Developer Workshop</title>
+  <meta name="description" content="A four-hour L300 workshop for developers and architects: publish .NET 10 and Function APIs, apply APIM policies, build a portal, and inventory APIs." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="assets/site.css" />
+</head>
+<body data-root="." data-active="home">
+  <div class="page">
+    <section class="landing-hero reveal">
+      <span class="eyebrow"><span class="nav-dot dot-blue"></span> Developer Workshop &middot; L300</span>
+      <h1>Publish, protect, and discover APIs with <span class="grad">Azure API Management and Azure API Center</span></h1>
+      <p class="lead">Build a consistent API experience from backend to consumer. Publish a .NET 10 Catalog API and Azure Functions, apply gateway policies, customize the developer portal, and register your API inventory.</p>
+      <div class="cta-row"><a class="btn btn-primary" href="topics/overview.html">Start the workshop &rarr;</a><a class="btn btn-ghost" href="labs/index.html#prework">Complete the prework</a><a class="btn btn-ghost" href="#topics">Browse topics</a></div>
+      <div class="hero-stats"><div class="stat"><strong>9</strong><span>Modules (1 optional)</span></div><div class="stat"><strong>5</strong><span>Hands-on labs</span></div><div class="stat"><strong>4 h</strong><span>Guided workshop</span></div></div>
+    </section>
+    <div class="section-head"><span class="kicker">Suggested flow</span><h2>Learning Path</h2><p>Designed for developers and architects who already know HTTP, REST, basic C#, and Azure resource management.</p></div>
+    <div class="steps">
+      <div class="step reveal"><div><h3>Start With the Platform</h3><p><a href="topics/overview.html">Overview</a> and <a href="topics/architecture-and-tiers.html">architecture and tiers</a> establish the runtime model. Complete <a href="labs/lab01-deploy-apim-portal.html">APIM provisioning</a> as prework.</p></div></div>
+      <div class="step reveal"><div><h3>Design and Publish a Contract</h3><p>Study <a href="topics/api-design-and-import.html">API design and import</a>, then publish the .NET 10 and Function APIs in Labs 02-03.</p></div></div>
+      <div class="step reveal"><div><h3>Control and Observe Calls</h3><p>Connect <a href="topics/policies-and-transformation.html">policies</a>, <a href="topics/security-and-access.html">security</a>, and <a href="topics/lifecycle-and-observability.html">lifecycle and observability</a> to successful and denied requests.</p></div></div>
+      <div class="step reveal"><div><h3>Enable Consumers and Govern the Portfolio</h3><p>Build the <a href="topics/developer-experience.html">developer experience</a> in Lab 04 and register your inventory with <a href="topics/api-center.html">API Center</a> in Lab 05.</p></div></div>
+      <div class="step reveal"><div><h3>Extend to GenAI (Optional)</h3><p>Apply the platform concepts to <a href="topics/genai-gateway.html">GenAI gateway design</a>: token budgets, model routing, semantic caching, and privacy-aware telemetry. Allow about 20 additional minutes outside the guided schedule.</p></div></div>
+    </div>
+    <div class="callout warning"><strong>Plan ahead:</strong> four hours includes concepts, active lab work, a break, and cleanup, not tool installation or cloud provisioning waits. Complete the <a href="labs/index.html#prework">prework</a>, use a disposable resource group, and review costs before deploying.</div>
+    <div class="callout"><strong>Go deeper:</strong> the topic modules include extended reference covering the primary presentation, with 14 original PowerPoint visuals. Explore <a href="topics/api-design-and-import.html#soap">SOAP and WebSockets</a>, <a href="topics/policies-and-transformation.html#caching">caching and validation</a>, <a href="topics/architecture-and-tiers.html#resilience">regions and zones</a>, and <a href="topics/lifecycle-and-observability.html#automation">automation, debugging, and events</a>. Extended reading is additional to the four-hour core.</div>
+    <div class="section-head" id="topics"><span class="kicker">Concept modules</span><h2>Workshop Topics</h2><p>Eight core modules support the five labs. An optional ninth module extends the concepts to GenAI gateway design.</p></div>
+    <div class="card-grid">
+      <a class="topic-card tone-blue reveal" href="topics/overview.html"><span class="tag">5 min</span><span class="ic"><img src="images/azure/10042-icon-service-API-Management-Services.svg" alt="" width="24" height="24" /></span><h3>Overview</h3><p>Separate API runtime control from organization-wide inventory.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-blue reveal" href="topics/architecture-and-tiers.html"><span class="tag">10 min</span><h3>Architecture and Service Tiers</h3><p>Place gateway, management, and portal responsibilities correctly.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-green reveal" href="topics/api-design-and-import.html"><span class="tag">15 min</span><h3>API Design and Import</h3><p>Choose code-first or design-first and respect import boundaries.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-purple reveal" href="topics/policies-and-transformation.html"><span class="tag">15 min</span><h3>Policies and Transformation</h3><p>Reason about execution, scope, inheritance, and rate limits.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-red reveal" href="topics/security-and-access.html"><span class="tag">10 min</span><h3>Security and Access Control</h3><p>Separate subscriptions, identity, and backend authentication.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-orange reveal" href="topics/lifecycle-and-observability.html"><span class="tag">10 min</span><h3>API Lifecycle and Observability</h3><p>Choose versions or revisions and diagnose request behavior.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-green reveal" href="topics/developer-experience.html"><span class="tag">10 min</span><h3>Products and Developer Experience</h3><p>Build a discoverable offering with consumer-scoped access.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-purple reveal" href="topics/api-center.html"><span class="tag">10 min</span><span class="ic"><img src="images/azure/03291-icon-service-API-Center.svg" alt="" width="24" height="24" /></span><h3>API Center and API Governance</h3><p>Connect versions, definitions, environments, and deployments.</p><span class="more">Open module &rarr;</span></a>
+      <a class="topic-card tone-purple reveal" href="topics/genai-gateway.html"><span class="tag">Optional &middot; 20 min additional</span><h3>GenAI Gateway With APIM</h3><p>Govern tokens, route model requests, and evaluate caching, privacy, and usage telemetry.</p><span class="more">Open module &rarr;</span></a>
+    </div>
+    <div class="section-head" id="labs"><span class="kicker">Build and verify</span><h2>Hands-on Labs</h2><p>Complete the labs in order. Each includes expected results, troubleshooting, and cleanup guidance.</p></div>
+    <div class="card-grid">
+      <a class="topic-card tone-blue reveal" href="labs/lab01-deploy-apim-portal.html"><span class="tag">Portal &middot; 15 min active</span><h3>Lab 01: Deploy Developer SKU APIM</h3><p>Create and verify the shared workshop environment.</p><span class="more">Open lab &rarr;</span></a>
+      <a class="topic-card tone-green reveal" href="labs/lab02-import-dotnet-api-vscode.html"><span class="tag">VS Code + portal &middot; 40 min</span><h3>Lab 02: Import a .NET 10 API</h3><p>Deploy Catalog, import OpenAPI, and inspect a gateway policy.</p><span class="more">Open lab &rarr;</span></a>
+      <a class="topic-card tone-green reveal" href="labs/lab03-import-functions-portal.html"><span class="tag">Portal &middot; 25 min</span><h3>Lab 03: Import Azure Functions</h3><p>Connect a function backend and observe throttling.</p><span class="more">Open lab &rarr;</span></a>
+      <a class="topic-card tone-orange reveal" href="labs/lab04-developer-portal-portal.html"><span class="tag">Portal &middot; 25 min</span><h3>Lab 04: Publish the Developer Portal</h3><p>Package APIs and test the published consumer journey.</p><span class="more">Open lab &rarr;</span></a>
+      <a class="topic-card tone-purple reveal" href="labs/lab05-api-center-portal.html"><span class="tag">Portal &middot; 25 min</span><h3>Lab 05: Inventory APIs in API Center</h3><p>Register the contract and runtime deployment, then clean up.</p><span class="more">Open lab &rarr;</span></a>
+    </div>
+    <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="labs/lab05-api-center-portal.html"><small>Previous</small><strong>&larr; Lab 05: API Center</strong></a><a class="next" href="topics/overview.html"><small>Next</small><strong>Overview &rarr;</strong></a></nav>
+  </div><script type="module" src="assets/site.js"></script>
+</body>
+</html>

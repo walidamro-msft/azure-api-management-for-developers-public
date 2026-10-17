@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Policies and Transformation &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Reason about APIM policy execution, scope inheritance, transformations, named values, and distributed rate limiting before applying changes to APIs." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="policies-and-transformation">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>Policies and Transformation</span></nav>
+    <header class="hero"><h1>Policies and Transformation</h1><p class="subtitle">Move shared API behavior into the gateway while keeping execution order, inheritance, and failure paths explicit.</p><div class="badge-row"><span class="badge">Gateway behavior</span><span class="badge">~15 min core + reference</span></div></header>
+    <div class="layout"><main class="content">
+      <div class="callout"><strong>Reading path:</strong> pipeline, scope, and policy selection form the core. Expressions, traffic-control comparisons, caching, transformations, validation, and the policy-family catalog provide extended reference.</div>
+      <section id="how-it-works" class="section-card reveal"><h2>Follow the Execution Pipeline</h2>
+        <p>Policies are ordered XML statements executed by the gateway. They can change routing, validate credentials, transform messages, control traffic, or emit telemetry without changing the backend implementation.</p>
+        <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    C[Consumer] --> I[Inbound]
+    I --> B[Backend]
+    B --> O[Outbound]
+    O --> R[Response]
+    I -.-> E[On error]
+    B -.-> E
+    O -.-> E
+    class C external
+    class I,B,O azure
+    class R success
+    class E danger
+        </pre></div>
+        <p class="diagram-caption">Blue stages run in order. Green is a completed response; red is the error branch, which skips remaining normal-stage statements.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-policies" target="_blank" rel="noopener">Policy configuration and error handling</a>.</div>
+      </section>
+      <section id="scopes" class="section-card reveal"><h2>Scope and Inheritance Matter</h2>
+        <p>Policies can be scoped globally, to a workspace, product, API, or operation. Not every policy supports every scope or gateway, and workspace availability depends on your service tier.</p>
+        <p>The <code>&lt;base /&gt;</code> element controls where inherited statements execute within each section. Keep it unless you deliberately intend to change inheritance and have reviewed the effective policy.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-19.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-19.png" alt="Nested global, product, API, and operation scopes contribute policies to inbound and outbound processing." width="930" height="620" loading="lazy" /></a><figcaption>Source presentation, slide 19, cropped with its example subscription identifier removed. The historical four-scope diagram omits workspace scope; policy placement and base elements determine the effective order.</figcaption></figure>
+        <div class="callout warning"><strong>Important:</strong> product policies are not applied to calls made with API-scoped, all-APIs, or built-in all-access subscriptions. An administrator's successful test is not proof that the consumer product policy behaves correctly.</div>
+        <div class="takeaway"><h3>How to choose</h3><p>Place behavior at the narrowest scope that meets your requirement. The labs use API scope so the expected behavior is visible regardless of the product subscription chosen later.</p></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-policies" target="_blank" rel="noopener">Scopes, subscription context, and inheritance</a>.</div>
+      </section>
+      <section id="decision" class="section-card reveal"><h2>Match the Policy to the Concern</h2>
+        <div class="table-wrap"><table><thead><tr><th>Concern</th><th>Policy family</th><th>Design check</th></tr></thead><tbody>
+          <tr><td>Normalize public headers or URLs</td><td>Transformation</td><td>Preserve the consumer contract and backend routing.</td></tr>
+          <tr><td>Validate identity and claims</td><td>Access restriction</td><td>Validate issuer, audience, signature, and required claims; do not merely decode a token.</td></tr>
+          <tr><td>Protect from request bursts</td><td>Rate limiting</td><td>Choose a counter key that matches your isolation boundary.</td></tr>
+          <tr><td>Reuse environment settings</td><td>Named values</td><td>Keep secrets out of policy source and plan rotation separately.</td></tr>
+        </tbody></table></div>
+        <p><code>rate-limit-by-key</code> returns <code>429 Too Many Requests</code> when the rate is exceeded. Distributed enforcement is approximate: do not treat an exact request number as a correctness guarantee or as a billing ledger.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/rate-limit-by-key-policy" target="_blank" rel="noopener">Rate-limit-by-key behavior</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-policies" target="_blank" rel="noopener">policy expressions and capabilities</a>.</div>
+        <p>Apply an outbound header in <a href="../labs/lab02-import-dotnet-api-vscode.html#build">Lab 02</a> and exercise throttling in <a href="../labs/lab03-import-functions-portal.html#test">Lab 03</a>.</p>
+      </section>
+      <section id="expressions" class="section-card reveal"><h2>Parameterize Behavior With Expressions and Named Values</h2>
+        <p>Policy expressions use supported C# syntax and an allowed subset of .NET types, not an unrestricted application runtime. A single expression uses <code>@(...)</code>; a multistatement expression uses <code>@{...}</code> and must return on every path. The implicit <code>context</code> exposes request, response, subscription, and variable information.</p>
+        <p>For example, <code>@(context.Request.Method == "GET")</code> can drive a <code>choose</code> condition. A selected branch can set a header or variable without applying that behavior to every method. Validate assumptions about missing headers, absent subscriptions, and body shape: expression verification is limited when saving, and exceptions can become runtime failures.</p>
+        <p>Named values are reusable configuration values referenced as <code>{{catalog-backend-url}}</code>. Choose plain values for nonsecret configuration, encrypted secret values for sensitive strings, or Key Vault references for centrally managed secrets. A named value is not a request-scoped variable; use policy variables for per-request state.</p>
+        <div class="callout warning"><strong>Important:</strong> secret storage does not make logging the resolved value safe. Keep credentials out of traces, response headers, exports, and source control. Plan rotation and verify reference refresh rather than assuming every credential updates immediately.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-policy-expressions" target="_blank" rel="noopener">Expression syntax and runtime limitations</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-properties" target="_blank" rel="noopener">named values and Key Vault integration</a>.</div>
+      </section>
+      <section id="traffic-controls" class="section-card reveal"><h2>Separate Rate, Quota, and Concurrency Controls</h2>
+        <div class="table-wrap"><table><thead><tr><th>Control</th><th>Question it answers</th><th>Representative policies</th></tr></thead><tbody>
+          <tr><td>Rate limit</td><td>How quickly can this caller issue requests during a short window?</td><td><code>rate-limit</code>, <code>rate-limit-by-key</code></td></tr>
+          <tr><td>Quota</td><td>How much call volume or bandwidth can this subscription or key consume over a period?</td><td><code>quota</code>, <code>quota-by-key</code></td></tr>
+          <tr><td>Concurrency</td><td>How many requests may execute the enclosed work at the same time?</td><td><code>limit-concurrency</code></td></tr>
+        </tbody></table></div>
+        <p>A subscription-based counter uses the APIM subscription context. An expression-keyed counter can use a different isolation boundary, but its input must be trustworthy: an arbitrary caller-supplied header is not a secure tenant identity. Decide what is counted, whether a conditional increment is appropriate, and which operations share the key.</p>
+        <p>Distributed rate limiting is approximate and regional gateways do not share one rate counter. Concurrency is about simultaneous work, not a requests-per-minute allowance or a global transaction lock. Verify the policy's gateway support and failure response; these controls protect capacity but are not an exact billing ledger.</p>
+        <p>For a slow backend, a quota alone will not prevent a burst from exhausting connections. Combine suitable controls and make clients handle throttling and retry guidance without retry storms. Lab 03 tests rejection and recovery, not a guaranteed rejection on a particular request number.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener">Rate, quota, concurrency policies and gateway support</a> and <a href="https://learn.microsoft.com/azure/api-management/rate-limit-by-key-policy" target="_blank" rel="noopener">distributed counter behavior</a>.</div>
+      </section>
+      <section id="caching" class="section-card reveal"><h2>Cache Without Crossing Data Boundaries</h2>
+        <p>Caching needs both a cache service and policies that use it. Response caching uses <code>cache-lookup</code> and <code>cache-store</code> for reusable GET responses. Value caching uses <code>cache-lookup-value</code> and <code>cache-store-value</code> for application-selected values and keys; <code>cache-remove-value</code> removes a selected value entry.</p>
+        <p>The built-in cache is regional and shared across units in that region; it is unavailable in Consumption and on the self-hosted gateway. Classic-tier cache contents do not persist across service updates, while the documented v2 implementation differs. An external Redis-compatible cache is a separately operated service with its own connectivity, availability, and cost considerations.</p>
+        <div class="table-wrap"><table><thead><tr><th>Design decision</th><th>What to inspect</th></tr></thead><tbody>
+          <tr><td>Cache key and variation</td><td>Include every input that changes the representation, such as relevant query parameters, headers, or trusted caller context.</td></tr>
+          <tr><td>Personalized responses</td><td>Do not share user- or tenant-specific data through a common cache entry. Explicitly review authorization-related caching settings.</td></tr>
+          <tr><td>Freshness</td><td>Choose an expiration that matches tolerated staleness, and decide how updates invalidate or replace cached values.</td></tr>
+          <tr><td>Cache failure</td><td>Expect misses and backend traffic. Place protective rate limiting after lookup so a cache outage does not overload the backend.</td></tr>
+        </tbody></table></div>
+        <p>The synthetic, public Catalog list is easier to reason about than a personalized order response, but a short TTL still changes freshness behavior. Measure cache hits and backend load; do not use latency alone as proof that a cache is correct. Response caching is an optional design choice, not enabled by the required labs.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/caching-overview" target="_blank" rel="noopener">Cache services, persistence, policy pairs, and failure behavior</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-cache" target="_blank" rel="noopener">response-cache configuration</a>.</div>
+      </section>
+      <section id="transformations" class="section-card reveal"><h2>Choose a Transformation That Preserves the Contract</h2>
+        <div class="table-wrap"><table><thead><tr><th>Intent</th><th>Policy</th><th>Design check</th></tr></thead><tbody>
+          <tr><td>Add, replace, or remove metadata</td><td><code>set-header</code>, <code>set-query-parameter</code></td><td>Distinguish consumer input from trusted gateway-generated values.</td></tr>
+          <tr><td>Map a public path to a backend path</td><td><code>rewrite-uri</code></td><td>Preserve route parameters and intentional query handling.</td></tr>
+          <tr><td>Select another backend</td><td><code>set-backend-service</code></td><td>Review backend identity and network reachability as well as the URL.</td></tr>
+          <tr><td>Construct a request or response payload</td><td><code>set-body</code></td><td>Preserve the documented content type, encoding, and schema.</td></tr>
+          <tr><td>Convert representation</td><td><code>xml-to-json</code>, <code>json-to-xml</code></td><td>Review namespaces, arrays, nulls, and representation differences.</td></tr>
+          <tr><td>Replace text or reshape XML</td><td><code>find-and-replace</code>, <code>xsl-transform</code></td><td>Prefer structural transformations when a text replacement could corrupt data.</td></tr>
+          <tr><td>Rewrite embedded backend links</td><td><code>redirect-content-urls</code></td><td>Check that returned URLs still lead consumers through the intended facade.</td></tr>
+        </tbody></table></div>
+        <p>The current URL-rewrite policy is <code>rewrite-uri</code>, not the presentation's <code>rewrite-url</code> label. An outbound header, as used in Lab 02, is a small transformation; changing a body can change the consumer contract and should be tested against its schemas and examples.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener">Transformation and routing policy references</a>.</div>
+      </section>
+      <section id="validation" class="section-card reveal"><h2>Enforce the Parts of the Contract You Intend</h2>
+        <p>An imported definition describes the contract; it does not automatically activate every validation rule. Choose request validation before backend work and response validation before returning data. Schema validation complements authentication and business authorization rather than replacing either.</p>
+        <div class="table-wrap"><table><thead><tr><th>Policy</th><th>What it checks</th><th>Example concern</th></tr></thead><tbody>
+          <tr><td><code>validate-content</code></td><td>Body size or content against supported JSON/XML schemas</td><td>Unexpected payload shape or excessive body size</td></tr>
+          <tr><td><code>validate-parameters</code></td><td>Request header, query, and path parameters against the API schema</td><td>A missing or invalid input parameter</td></tr>
+          <tr><td><code>validate-headers</code></td><td>Response headers against the API schema</td><td>A backend response missing required metadata</td></tr>
+          <tr><td><code>validate-status-code</code></td><td>Response status codes against the API schema</td><td>An undocumented backend response</td></tr>
+          <tr><td><code>validate-graphql-request</code></td><td>GraphQL request validation and authorization settings</td><td>A query that exceeds the allowed shape or access rules</td></tr>
+        </tbody></table></div>
+        <p>Review each policy's supported sections, actions, schema restrictions, and gateway support. Decide whether a violation is observed or prevented, and include negative tests. Tightening response validation can expose backend drift to consumers, so treat it as a compatibility change rather than a harmless documentation update.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener">Content-validation policies and gateway support</a> and <a href="https://learn.microsoft.com/azure/api-management/validate-content-policy" target="_blank" rel="noopener">content-validation actions and constraints</a>.</div>
+      </section>
+      <section id="policy-families" class="section-card reveal"><h2>Navigate the Wider Policy Catalog</h2>
+        <p>The presentation's fixed policy count is historical. Choose by concern, supported gateway, scope, and execution section instead of memorizing a count.</p>
+        <div class="table-wrap"><table><thead><tr><th>Family</th><th>Representative capabilities</th><th>Boundary</th></tr></thead><tbody>
+          <tr><td>Authentication and access restriction</td><td>JWT/certificates, header checks, IP filtering, backend credentials</td><td>See <a href="security-and-access.html#authentication">identity and certificate responsibilities</a>.</td></tr>
+          <tr><td>Traffic protection and caching</td><td>Rate, quota, concurrency, response/value caches</td><td>Choose counters and data boundaries explicitly.</td></tr>
+          <tr><td>Routing and transformation</td><td>Backend selection, proxying, URLs, methods, status, payloads</td><td>Preserve an intentional public contract.</td></tr>
+          <tr><td>Control flow and error handling</td><td><code>choose</code>, <code>retry</code>, <code>wait</code>, <code>return-response</code>, <code>forward-request</code></td><td>Account for repeated backend work, short-circuiting, and error paths.</td></tr>
+          <tr><td>External communication and telemetry</td><td><code>send-request</code>, <code>send-one-way-request</code>, <code>trace</code>, <code>log-to-eventhub</code></td><td>Consider latency, failures, credentials, and sensitive logged fields.</td></tr>
+          <tr><td>Cross-domain behavior</td><td>CORS; legacy JSONP/cross-domain policies remain in the catalog</td><td>Browser access rules are not authentication; prefer the supported modern client model.</td></tr>
+          <tr><td>Dapr integration</td><td>Service invocation, pub/sub publishing, output bindings</td><td>These Dapr policies target the self-hosted gateway; they are not a managed-gateway lab feature.</td></tr>
+        </tbody></table></div>
+        <div class="takeaway"><h3>Key takeaway</h3><p>Compose the smallest effective policy that meets your concern, and inspect the complete inherited pipeline. A valid XML document is not proof of safe runtime behavior.</p></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener">Current policy catalog and per-gateway support</a>.</div>
+      </section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="api-design-and-import.html"><small>Previous</small><strong>&larr; API Design and Import</strong></a><a class="next" href="security-and-access.html"><small>Next</small><strong>Security and Access Control &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#how-it-works">Execution Pipeline</a><a href="#scopes">Scope and Inheritance</a><a href="#decision">Policy Decisions</a><a href="#expressions">Expressions and Named Values</a><a href="#traffic-controls">Rate, Quota, Concurrency</a><a href="#caching">Caching</a><a href="#transformations">Transformations</a><a href="#validation">Validation</a><a href="#policy-families">Policy Catalog</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

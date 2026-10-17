@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 02: Import a .NET 10 API &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Run a .NET 10 Catalog API, export an OpenAPI 3.0 definition, deploy to App Service, import into APIM, and verify an outbound policy and request trace." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="lab02-import-dotnet-api">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><a href="index.html">Labs</a><span class="sep">/</span><span>Lab 02</span></nav>
+    <header class="hero"><h1>Lab 02: Import a .NET 10 API</h1><p class="subtitle">Publish the read-only Catalog API through APIM and prove that your gateway policy executed.</p><div class="badge-row"><span class="badge">VS Code + portal</span><span class="badge">L300</span><span class="badge">~40 min</span></div></header>
+    <div class="layout"><main class="content">
+      <section id="scenario" class="section-card reveal"><h2>Scenario and Objectives</h2><p>You own a small Catalog API and want a stable gateway endpoint for consumers. Use synthetic data so you can focus on the contract and request path.</p><ul><li>Export OpenAPI 3.0 from .NET 10.</li><li>Deploy a reachable App Service backend.</li><li>Import operations and configure an API-scoped outbound policy.</li><li>Verify payloads, denied calls, and request stages.</li></ul><div class="callout"><strong>Related topics:</strong> <a href="../topics/api-design-and-import.html">API Design and Import</a> and <a href="../topics/policies-and-transformation.html">Policies and Transformation</a>.</div></section>
+      <section id="architecture" class="section-card reveal"><h2>Architecture</h2><div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    L[Local .NET API] --> O[OpenAPI file]
+    O -.-> G[APIM Catalog API]
+    C[Consumer] --> G
+    G --> B[App Service backend]
+    class L,B,G azure
+    class O data
+    class C external
+      </pre></div><p class="diagram-caption">Teal is the exported contract; blue nodes are code and runtime services. The managed gateway calls App Service, not localhost.</p></section>
+      <section id="prerequisites" class="section-card reveal"><h2>Prerequisites and Names</h2><ul><li>Complete Lab 01 and wait for APIM readiness.</li><li>Install .NET 10 SDK, Git, VS Code, PowerShell 7, and Azure CLI.</li><li>Clone the workshop repository during <a href="index.html#prework">prework</a>; open its folder in VS Code.</li><li>Use a subscription and region that permit App Service deployment and the chosen plan.</li></ul><div class="table-wrap"><table><thead><tr><th>Resource</th><th>Name or value</th></tr></thead><tbody><tr><td>Resource group</td><td><code>rg-apim-workshop-&lt;suffix&gt;</code></td></tr><tr><td>Web app</td><td><code>catalog-workshop-&lt;suffix&gt;</code></td></tr><tr><td>Frontend API / URL suffix</td><td><code>Catalog API</code> / <code>catalog</code></td></tr><tr><td>Local URL</td><td><code>http://localhost:5050</code></td></tr></tbody></table></div><div class="callout warning"><strong>Important:</strong> the App Service backend is deliberately public and read-only with synthetic data. Gateway subscription checks do not secure its direct URL. Do not deploy real data or treat this as production authentication.</div></section>
+      <section id="build" class="section-card reveal"><h2>Build</h2>
+        <h3>Step 1: Run the Supplied API</h3><ol><li>Open a PowerShell terminal at the repository root.</li><li>Run the following commands.</li></ol>
+        <span class="code-label">PowerShell - repository root</span><pre class="code" data-lang="powershell">Set-Location .\samples\CatalogApi
+dotnet build
+dotnet run --urls http://localhost:5050</pre>
+        <p><strong>Expected result:</strong> the build succeeds and the console reports a listener on port 5050. Keep this terminal running.</p>
+        <ol start="3"><li>Open <code>samples\CatalogApi\Program.cs</code> and inspect the explicit version selection:</li></ol>
+        <pre class="code" data-lang="csharp">builder.Services.AddOpenApi(options =&gt;
+    options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0);</pre>
+        <p>Review <code>CatalogApi.http</code> for the list, lookup, missing-product, and OpenAPI requests. The API has no database and makes no persistent changes.</p>
+        <h3>Step 2: Save and Inspect the Contract</h3><ol><li>Open a second PowerShell terminal in <code>samples\CatalogApi</code>.</li><li>Export the definition and inspect its version and paths.</li></ol>
+        <pre class="code" data-lang="powershell">Invoke-WebRequest http://localhost:5050/openapi/v1.json -OutFile .\catalog.openapi.json
+$definition = Get-Content .\catalog.openapi.json -Raw | ConvertFrom-Json
+$definition.openapi
+if ($definition.openapi -eq "3.0.4") {
+    $definition.openapi = "3.0.3"
+    $definition | ConvertTo-Json -Depth 100 | Set-Content .\catalog.openapi.json -Encoding utf8
+}
+if ($definition.openapi -notmatch '^3\.0\.[0-3]$') {
+    throw "Expected an APIM-compatible OpenAPI 3.0.0-3.0.3 document. Inspect the generator configuration."
+}
+$definition.paths.PSObject.Properties.Name
+Invoke-RestMethod http://localhost:5050/products</pre>
+        <p><strong>Expected result:</strong> an exported OpenAPI document between <code>3.0.0</code> and <code>3.0.3</code>, paths <code>/products</code> and <code>/products/{id}</code>, and two products: Notebook and Pen.</p>
+        <div class="callout"><strong>Compatibility note:</strong> the supplied current generator emits <code>3.0.4</code>, while APIM's documented 3.0 support currently stops at <code>3.0.3</code>. The export above normalizes only that patch-level marker within the same 3.0 format. The OpenAPI specification states patch versions share the same feature set. This is not a conversion from 3.1: never relabel a 3.1 document, whose schema semantics differ.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-api-import-restrictions" target="_blank" rel="noopener">APIM-supported OpenAPI versions</a>. The <a href="https://spec.openapis.org/oas/v3.0.4.html#versions" target="_blank" rel="noopener">OpenAPI versioning specification</a> explains patch-level compatibility.</div>
+        <h3>Step 3: Deploy to App Service</h3><ol><li>Stop the local API using <kbd>Ctrl</kbd>+<kbd>C</kbd> in its terminal after exporting the file.</li><li>Set the placeholders below to your workshop values in the second terminal.</li><li>Sign in and confirm the selected subscription before deployment.</li></ol>
+        <span class="code-label">PowerShell - samples\CatalogApi</span><pre class="code" data-lang="powershell">$resourceGroup = "rg-apim-workshop-&lt;suffix&gt;"
+$appName = "catalog-workshop-&lt;suffix&gt;"
+$region = "&lt;approved-region&gt;"
+az login
+az account show --query "{name:name}" --output table
+az webapp up --name $appName --resource-group $resourceGroup --location $region --os-type Windows --runtime "DOTNET:10" --sku F1
+if ($LASTEXITCODE -ne 0) { throw "App Service deployment failed. Inspect the Azure CLI error before continuing." }
+$hostName = az webapp show --name $appName --resource-group $resourceGroup --query defaultHostName --output tsv
+if ($LASTEXITCODE -ne 0) { throw "Could not read the deployed hostname." }
+$backendUrl = "https://$hostName"
+Invoke-RestMethod "$backendUrl/products"</pre>
+        <p><strong>Expected result:</strong> the deployed HTTPS endpoint returns the same two products. Read the actual hostname from Azure; do not assume its shape. If F1 is unavailable, resolve subscription quota/region restrictions first; do not accept a paid plan without reviewing its price.</p>
+        <p>OpenAPI is exposed locally in Development only. You already saved the file, so do not enable Development on the deployed app just to import it.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/app-service/quickstart-dotnetcore?tabs=net10&amp;pivots=development-environment-cli" target="_blank" rel="noopener">App Service CLI deployment</a> and <a href="https://learn.microsoft.com/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0" target="_blank" rel="noopener">OpenAPI generation</a>.</div>
+        <h3>Step 4: Import Into APIM</h3><ol>
+          <li>Open your APIM instance in the Azure portal.</li><li>Select <strong>APIs</strong> &gt; <strong>APIs</strong> &gt; <strong>+ Add API</strong>.</li><li>Select <strong>OpenAPI</strong> under <strong>Create from definition</strong>.</li><li>Browse to your saved <code>catalog.openapi.json</code>.</li><li>Set <strong>Display name</strong> to <code>Catalog API</code> and <strong>API URL suffix</strong> to <code>catalog</code>.</li><li>Select <strong>Create</strong>.</li><li>Open the imported API's <strong>Settings</strong> tab.</li><li>Set <strong>Web service URL</strong> to the HTTPS <code>$backendUrl</code> value, with no <code>/products</code> suffix.</li><li>Confirm <strong>Subscription required</strong> is selected, then save.</li>
+        </ol><p><strong>Expected result:</strong> the frontend has two GET operations and routes <code>/catalog/products</code> to the backend's <code>/products</code>.</p>
+        <h3>Step 5: Add an Outbound Header</h3><ol><li>Select <strong>Design</strong> &gt; <strong>All operations</strong> for Catalog API.</li><li>Open the policy code editor using the <strong>&lt;/&gt;</strong> icon.</li><li>Add the following inside the existing <code>&lt;outbound&gt;</code> section after its <code>&lt;base /&gt;</code>. Preserve all other sections.</li></ol>
+        <span class="code-label">XML fragment - inside outbound</span><pre class="code" data-lang="xml">&lt;set-header name="X-Workshop" exists-action="override"&gt;
+    &lt;value&gt;apim-catalog&lt;/value&gt;
+&lt;/set-header&gt;</pre>
+        <ol start="4"><li>Save the policy and wait for configuration propagation before testing.</li></ol>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/import-api-from-oas?tabs=portal" target="_blank" rel="noopener">OpenAPI import</a>, <a href="https://learn.microsoft.com/azure/api-management/api-management-api-import-restrictions" target="_blank" rel="noopener">import restrictions</a>, and <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-policies" target="_blank" rel="noopener">policy editing and inheritance</a>.</div>
+      </section>
+      <section id="test" class="section-card reveal"><h2>Test and Verify</h2><ol><li>Select Catalog API &gt; <strong>Test</strong> and the <strong>ListProducts</strong> operation (or the corresponding GET /products operation).</li><li>Select <strong>Send</strong>.</li><li>Inspect the response body and headers.</li><li>Select the product lookup operation and test ID <code>1</code>, then <code>999</code>.</li><li>For the list operation, select <strong>Trace</strong> and inspect <strong>Inbound</strong>, <strong>Backend</strong>, and <strong>Outbound</strong> on the response's <strong>Trace</strong> tab. Do not copy or share trace credentials.</li></ol>
+        <ul class="checklist"><li>The list call returns 200 and exactly two products.</li><li>ID 1 returns Notebook; ID 999 returns 404.</li><li>The gateway response includes <code>X-Workshop: apim-catalog</code>.</li><li>The trace backend URL uses App Service, not localhost.</li></ul>
+        <p>To verify subscription enforcement independently, open the gateway URL below in a private browser window with no headers or query credentials:</p><pre class="code" data-lang="text">https://&lt;apim-gateway-host&gt;/catalog/products</pre><p><strong>Expected result:</strong> 401 for a missing subscription key. If it succeeds, inspect <strong>Subscription required</strong> and remove any open-product association. Use a product-scoped consumer key in Lab 04 rather than exporting the administrator's all-access key.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-api-inspector" target="_blank" rel="noopener">Portal tracing</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-subscriptions" target="_blank" rel="noopener">subscription checks</a>.</div>
+      </section>
+      <section id="troubleshoot" class="section-card reveal"><h2>Troubleshooting</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Check</th></tr></thead><tbody><tr><td>SDK or package error</td><td>Run <code>dotnet --list-sdks</code>; install .NET 10 and confirm NuGet access.</td></tr><tr><td>Local definition returns 404</td><td>Run with the Development launch profile, not a Production environment, and use port 5050.</td></tr><tr><td>App Service deployment fails</td><td>Inspect the CLI error, subscription permissions, available Windows .NET runtimes, and F1 quota. Stop before importing a nonworking backend.</td></tr><tr><td>Gateway returns 500/502/404</td><td>Call the direct backend first; check Web service URL, path suffix, and trace routing.</td></tr><tr><td>Header absent</td><td>Check API-level All operations outbound policy, inherited policy order, and propagation.</td></tr></tbody></table></div></section>
+      <section id="cleanup" class="section-card reveal"><h2>Cleanup and References</h2><p>Keep APIM, App Service, and <code>catalog.openapi.json</code> for later labs. Stop the local process when not needed. Hosting charges and quotas remain relevant even if no requests are sent.</p><p>If ending here, follow the <a href="lab05-api-center-portal.html#cleanup">final cleanup</a> for the dedicated group. Deleting only the web app can leave its App Service plan behind.</p><div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/app-service/quickstart-dotnetcore" target="_blank" rel="noopener">Deploy and clean up an ASP.NET app</a>.</div></section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="lab01-deploy-apim-portal.html"><small>Previous</small><strong>&larr; Lab 01: Deploy APIM</strong></a><a class="next" href="lab03-import-functions-portal.html"><small>Next</small><strong>Lab 03: Import Azure Functions &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#scenario">Scenario</a><a href="#architecture">Architecture</a><a href="#prerequisites">Prerequisites</a><a href="#build">Build</a><a href="#test">Test and Verify</a><a href="#troubleshoot">Troubleshooting</a><a href="#cleanup">Cleanup</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

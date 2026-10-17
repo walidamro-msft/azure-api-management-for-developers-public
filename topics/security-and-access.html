@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security and Access Control &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Separate consumer identity, APIM subscriptions, backend authentication, and management permissions so that gateway access does not imply end-to-end security." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="security-and-access">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>Security and Access Control</span></nav>
+    <header class="hero"><h1>Security and Access Control</h1><p class="subtitle">Protect each connection separately and test denied requests as deliberately as successful calls.</p><div class="badge-row"><span class="badge">Trust boundaries</span><span class="badge">~10 min core + reference</span></div></header>
+    <div class="layout"><main class="content">
+      <div class="callout"><strong>Reading path:</strong> trust boundaries, control selection, and the lab boundary form the core. Authentication details and protection across service planes provide extended reference.</div>
+      <section id="boundaries" class="section-card reveal"><h2>Separate the Trust Boundaries</h2>
+        <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    C[Consumer identity] --> G[APIM gateway]
+    K[Subscription key] --> G
+    G --> B[Backend authentication]
+    B --> F[Backend service]
+    P[Management identity] -.-> G
+    class C,P external
+    class K neutral
+    class G,F azure
+    class B success
+        </pre></div>
+        <p class="diagram-caption">Blue services execute the request. Green represents a separate backend trust check; a gray subscription key is not the consumer's identity.</p>
+        <p>A subscription key enables access under an APIM subscription. It is not the same as an Azure subscription and does not establish an end user's identity. Use identity-aware validation when your API needs user or application claims.</p>
+        <p>Backend authentication is independent of the caller's APIM key. Your backend must reject unwanted direct calls if bypassing the gateway would violate your security model.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-subscriptions" target="_blank" rel="noopener">Subscriptions</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-faq" target="_blank" rel="noopener">backend protection options</a>.</div>
+      </section>
+      <section id="choose" class="section-card reveal"><h2>Choose Controls by Responsibility</h2>
+        <div class="table-wrap"><table><thead><tr><th>Responsibility</th><th>Control to evaluate</th><th>What it does not replace</th></tr></thead><tbody>
+          <tr><td>Consumer access plan</td><td>Product subscription and usage policies</td><td>User identity or domain authorization</td></tr>
+          <tr><td>Identity and claims</td><td>Microsoft Entra token or JWT validation</td><td>Backend authorization for business resources</td></tr>
+          <tr><td>Gateway-to-backend trust</td><td>Managed identity, certificates, or a backend-specific credential</td><td>Inbound consumer authentication</td></tr>
+          <tr><td>Network reachability</td><td>Appropriate private connectivity and filtering</td><td>Request-level authentication and authorization</td></tr>
+          <tr><td>Configuration access</td><td>Azure role-based access control</td><td>Permission to call the frontend API</td></tr>
+        </tbody></table></div>
+        <div class="callout danger"><strong>Avoid:</strong> treating CORS as authentication, using a built-in all-access subscription in consumer applications, or storing keys in source code. A bearer token is sensitive even when its claims are readable.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/training/modules/implement-application-interface-security-management/" target="_blank" rel="noopener">Backend security learning module</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-subscriptions" target="_blank" rel="noopener">subscription scope and key management</a>.</div>
+      </section>
+      <section id="lab-boundary" class="section-card reveal"><h2>Understand the Workshop Boundary</h2>
+        <p>The Catalog backend is a public, read-only demonstration with synthetic data. APIM subscription enforcement protects its gateway URL, not its direct App Service URL. This is not a production security design.</p>
+        <p>The Function lab uses Function authorization. Import creates an APIM-specific host key and a named value; changing one does not automatically synchronize the other. Keep credential values out of screenshots, traces, and shared files.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/import-function-app-as-api" target="_blank" rel="noopener">Function authorization and rotation</a>.</div>
+        <p>Test the two connections in <a href="../labs/lab03-import-functions-portal.html">Lab 03</a>, then test product-scoped consumer access in <a href="../labs/lab04-developer-portal-portal.html">Lab 04</a>.</p>
+      </section>
+      <section id="authentication" class="section-card reveal"><h2>Validate Identity Rather Than Just Reading Credentials</h2>
+        <p>APIM can enforce subscription keys without a custom authentication policy when the API requires a subscription. Keys are useful for access plans and attribution, but possession of a shared key does not identify a person or prove permission to a specific business record.</p>
+        <p>For bearer tokens, <code>validate-jwt</code> validates a token against configured signing information, issuers, audiences, expiry requirements, and required claims. OpenID Connect discovery can supply signing configuration. The <code>validate-azure-ad-token</code> policy is the purpose-specific option for Microsoft Entra tokens. Decoding a token is not signature validation, and a valid signature alone is not sufficient authorization.</p>
+        <p>Choose the expected issuer and audience deliberately: a token intended for a different API should not become valid simply because you trust its identity provider. Required scopes or roles must match the operation, and the backend still owns resource-level rules such as which account a caller may read.</p>
+        <p>For certificate-based callers, <code>validate-client-certificate</code> checks the presented certificate against validation rules and selected identity properties. Plan trust, revocation, validity dates, and renewal, and verify how your gateway requests and receives client certificates. This inbound check is separate from <code>authentication-certificate</code>, which authenticates APIM to a backend.</p>
+        <div class="callout warning"><strong>Important:</strong> a developer portal OAuth test configuration is not a substitute for enforcing a token-validation policy at the gateway. Test missing credentials, expired credentials, wrong audience, and insufficient permissions as separate cases.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/validate-jwt-policy" target="_blank" rel="noopener">JWT validation</a>, <a href="https://learn.microsoft.com/azure/api-management/validate-client-certificate-policy" target="_blank" rel="noopener">client-certificate validation</a>, and <a href="https://learn.microsoft.com/azure/api-management/api-management-policies" target="_blank" rel="noopener">authentication and authorization policy choices</a>.</div>
+      </section>
+      <section id="service-planes" class="section-card reveal"><h2>Protect the Data, Management, and User Planes</h2>
+        <div class="table-wrap"><table><thead><tr><th>Plane</th><th>Threat or failure to consider</th><th>Controls to evaluate</th></tr></thead><tbody>
+          <tr><td>Data: gateway and backend calls</td><td>Unauthorized callers, abusive volume, invalid payloads, direct backend bypass</td><td>Identity validation, backend authentication, <a href="policies-and-transformation.html#validation">schema validation</a>, traffic controls, and suitable network isolation.</td></tr>
+          <tr><td>Management: service configuration</td><td>Unreviewed policy or credential changes</td><td>Least-privilege Azure RBAC, controlled deployment identities, review gates, and activity logs.</td></tr>
+          <tr><td>User: developer onboarding</td><td>Incorrect portal access, product visibility, or subscription approval</td><td>Supported identity providers, product/group design, approval rules, and consumer-account testing.</td></tr>
+        </tbody></table></div>
+        <p>IP filtering and private networking constrain reachability, but neither expresses every business authorization rule. WAF and DDoS protections are complementary platform services, not a promise that creating APIM prevents every attack. Verify the chosen network and perimeter architecture for the actual tier.</p>
+        <p>Keep secrets and certificates in appropriately managed stores and separate them from policy source. Use <a href="policies-and-transformation.html#expressions">named values and secret references</a> to centralize configuration, but still review who may modify policies and where resolved values can appear.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">Component responsibilities</a>, <a href="https://learn.microsoft.com/azure/api-management/api-management-faq" target="_blank" rel="noopener">API and backend security</a>, and <a href="https://learn.microsoft.com/azure/api-management/devops-api-development-templates" target="_blank" rel="noopener">configuration approval gates</a>.</div>
+      </section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="policies-and-transformation.html"><small>Previous</small><strong>&larr; Policies and Transformation</strong></a><a class="next" href="lifecycle-and-observability.html"><small>Next</small><strong>API Lifecycle and Observability &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#boundaries">Trust Boundaries</a><a href="#choose">Choose Controls</a><a href="#lab-boundary">Workshop Boundary</a><a href="#authentication">Tokens and Certificates</a><a href="#service-planes">Protect Service Planes</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

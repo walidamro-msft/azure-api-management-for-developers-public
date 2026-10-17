@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Center and API Governance &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Model an API inventory using API Center APIs, versions, definitions, environments, and deployments, and distinguish design-time governance from runtime control." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="api-center">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>API Center and API Governance</span></nav>
+    <header class="hero"><h1>API Center and API Governance</h1><p class="subtitle">Describe what exists, where it runs, and which contract it implements without inserting another gateway into the request path.</p><div class="badge-row"><span class="badge">Inventory</span><span class="badge">Design-time governance</span><span class="badge">~10 min</span></div></header>
+    <div class="layout"><main class="content">
+      <section id="what-is" class="section-card reveal"><h2>Inventory Beyond One Gateway</h2>
+        <p>Azure API Center maintains structured information about APIs across your organization. You can inventory APIs in design, APIs behind APIM, and APIs deployed elsewhere.</p>
+        <p>Inventory and metadata support discovery and governance. They do not automatically secure a backend, route traffic, or guarantee that a stored contract matches the running implementation.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-center/overview" target="_blank" rel="noopener">API Center overview</a> and <a href="https://learn.microsoft.com/azure/api-center/frequently-asked-questions" target="_blank" rel="noopener">relationship to API Management</a>.</div>
+      </section>
+      <section id="model" class="section-card reveal"><h2>Represent Your Real API</h2>
+        <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    A[API] --> V[Version]
+    V --> D[Definition]
+    A --> P[Deployment]
+    P --> D
+    P --> E[Environment]
+    E -.-> G[APIM gateway]
+    class A,V accent
+    class D data
+    class P,E neutral
+    class G azure
+        </pre></div>
+        <p class="diagram-caption">Purple identifies the API and version; teal is its contract. Gray inventory records describe the deployment and environment, while blue represents the actual runtime service.</p>
+        <div class="table-wrap"><table><thead><tr><th>Entity</th><th>Catalog example</th></tr></thead><tbody>
+          <tr><td>API</td><td>Catalog API with a description and metadata.</td></tr>
+          <tr><td>Version</td><td><code>v1</code>, with an explicit lifecycle stage.</td></tr>
+          <tr><td>Definition</td><td>The OpenAPI document generated and imported in Lab 02.</td></tr>
+          <tr><td>Environment</td><td>The workshop's testing APIM environment.</td></tr>
+          <tr><td>Deployment</td><td>The gateway base URL for that definition in that environment.</td></tr>
+        </tbody></table></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-center/tutorials/register-apis" target="_blank" rel="noopener">APIs, versions, and definitions</a> and <a href="https://learn.microsoft.com/azure/api-center/tutorials/configure-environments-deployments" target="_blank" rel="noopener">environments and deployments</a>.</div>
+      </section>
+      <section id="decision" class="section-card reveal"><h2>Start Small, Keep Records Useful</h2>
+        <p>Use a small metadata vocabulary with clear ownership. A manually registered record is useful only if someone maintains its lifecycle, definition, and deployment information when the API changes.</p>
+        <p>API Center offers Free and Standard plans. The required lab uses Free and manual registration; it does not depend on synchronization or a separate API Center portal deployment. Verify current limits and regional availability before provisioning.</p>
+        <div class="callout warning"><strong>Important:</strong> the documented API Center Standard-plan benefit for linked APIM instances lists Standard, Standard v2, Premium, and Premium v2. Do not assume the workshop's Developer tier qualifies.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-center/overview" target="_blank" rel="noopener">Current plans, benefits, limits, and regions</a>. Verified on 2026-10-16.</div>
+        <div class="takeaway"><h3>Key takeaway</h3><p>APIM governs calls. API Center helps govern the portfolio. A reliable API platform needs the right controls at both levels.</p></div>
+        <p>Register your Catalog API in <a href="../labs/lab05-api-center-portal.html">Lab 05</a>.</p>
+      </section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="developer-experience.html"><small>Previous</small><strong>&larr; Products and Developer Experience</strong></a><a class="next" href="genai-gateway.html"><small>Next (optional reference)</small><strong>GenAI Gateway With APIM &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#what-is">Inventory</a><a href="#model">Information Model</a><a href="#decision">Governance Decisions</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

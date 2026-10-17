@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Design and Import &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Compare code-first and design-first APIs, understand frontend and backend contracts, and handle .NET 10 OpenAPI and Azure Functions import constraints." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="api-design-and-import">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>API Design and Import</span></nav>
+    <header class="hero"><h1>API Design and Import</h1><p class="subtitle">Make the public contract intentional, then import it without confusing an API definition with a working backend connection.</p><div class="badge-row"><span class="badge">OpenAPI</span><span class="badge">.NET 10</span><span class="badge">~15 min core + reference</span></div></header>
+    <div class="layout"><main class="content">
+      <div class="callout"><strong>Reading path:</strong> contract terms, starting points, and import boundaries form the core. SOAP, WebSockets, design-first implementation, and IDE tooling extend the reference coverage.</div>
+      <section id="key-terms" class="section-card reveal"><h2>Know Which API You Are Changing</h2>
+        <div class="table-wrap"><table><thead><tr><th>Term</th><th>Meaning for your design</th></tr></thead><tbody>
+          <tr><td>Backend API</td><td>The service that implements your operations.</td></tr>
+          <tr><td>Frontend API</td><td>The contract APIM exposes to consumers. It can differ from the backend through policies.</td></tr>
+          <tr><td>Operation</td><td>An HTTP method and URL template that resolve to a frontend API action.</td></tr>
+          <tr><td>Definition</td><td>A description such as OpenAPI; importing it does not deploy or secure your backend.</td></tr>
+        </tbody></table></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-terminology" target="_blank" rel="noopener">APIM terminology</a>.</div>
+      </section>
+      <section id="how-it-works" class="section-card reveal"><h2>Choose Your Starting Point</h2>
+        <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    C[Implement API] --> O[OpenAPI definition]
+    D[Design contract] --> O
+    O --> A[APIM frontend API]
+    A --> B[Reachable backend]
+    class C,D neutral
+    class O data
+    class A,B azure
+        </pre></div>
+        <p class="diagram-caption">Gray starting points converge on a teal contract. Blue runtime components still need a real, reachable backend.</p>
+        <p><strong>Code-first:</strong> generate the definition from an implementation, then review the consumer contract. <strong>Design-first:</strong> agree the definition before implementing; mocking can let consumers start before the backend is complete.</p>
+        <div class="takeaway"><h3>Key takeaway</h3><p>In either approach, review operation names, schemas, status codes, and compatibility as consumer-facing design decisions. Generated does not mean reviewed.</p></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0" target="_blank" rel="noopener">Generate OpenAPI documents</a> and <a href="https://learn.microsoft.com/azure/api-management/import-api-from-oas?tabs=portal" target="_blank" rel="noopener">import a definition</a>.</div>
+      </section>
+      <section id="compatibility" class="section-card reveal"><h2>Respect Import Boundaries</h2>
+        <div class="cheat">
+          <div class="cheat-item tone-orange"><h3>.NET 10 compatibility</h3><p>.NET 10 generates OpenAPI 3.1 by default. APIM permits 3.1 import but does not fully process its specific constructs. These labs explicitly generate 3.0 instead of relabeling a 3.1 document.</p></div>
+          <div class="cheat-item tone-red"><h3>Security is separate</h3><p>OpenAPI security definitions are ignored on import. Configure subscriptions and authentication policies explicitly, and test a denied request.</p></div>
+          <div class="cheat-item tone-blue"><h3>Backend reachability</h3><p>A locally saved definition can be imported, but the managed gateway cannot reach your laptop's localhost. Use the deployed backend hostname.</p></div>
+          <div class="cheat-item tone-green"><h3>Function import</h3><p>Resource import supports HTTP-triggered functions with Anonymous or Function authorization. APIM's subscription key and the Function host key protect different connections.</p></div>
+        </div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-api-import-restrictions" target="_blank" rel="noopener">OpenAPI restrictions</a> and <a href="https://learn.microsoft.com/azure/api-management/import-function-app-as-api" target="_blank" rel="noopener">Function App import requirements</a>. Verified on 2026-10-16.</div>
+      </section>
+      <section id="soap" class="section-card reveal"><h2>Modernize a SOAP Facade Deliberately</h2>
+        <p>A WSDL describes SOAP operations and message shapes. APIM can import it as a SOAP pass-through API, where consumers still send SOAP, or expose a REST-style facade with policies that translate requests and responses to the SOAP backend.</p>
+        <div class="table-wrap"><table><thead><tr><th>Choice</th><th>Consumer experience</th><th>Design responsibility</th></tr></thead><tbody>
+          <tr><td>SOAP pass-through</td><td>SOAP messages and operations remain visible.</td><td>Review supported WSDL constructs and preserve the intended SOAP behavior.</td></tr>
+          <tr><td>SOAP-to-REST</td><td>HTTP resource operations are mapped to SOAP messages.</td><td>Review generated URL/method choices, payload mappings, faults, and transformation policies.</td></tr>
+        </tbody></table></div>
+        <p>For example, a consumer-facing product lookup can become a REST-style operation while the backend retains its SOAP contract. That is interface modernization, not a rewrite of the backend implementation. Test success, validation errors, SOAP faults, and namespace-dependent payloads rather than assuming an import is production-ready.</p>
+        <p>WSDL import has restrictions, including unsupported external import/include dependencies. Resolve the definition into a supported form and inspect the import restrictions before choosing this migration path. The deck's "one-click" description should not replace contract and behavior review.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/import-soap-api" target="_blank" rel="noopener">SOAP pass-through</a>, <a href="https://learn.microsoft.com/azure/api-management/restify-soap-api" target="_blank" rel="noopener">SOAP-to-REST conversion</a>, and <a href="https://learn.microsoft.com/azure/api-management/api-management-api-import-restrictions" target="_blank" rel="noopener">WSDL restrictions</a>.</div>
+      </section>
+      <section id="websockets" class="section-card reveal"><h2>Understand WebSocket Passthrough</h2>
+        <p>A WebSocket connection starts with a handshake. The client connects to APIM, APIM connects to the backend, and the gateway brokers messages after the upgrade. Each established connection maps one client to one backend; it is not load-balanced message by message across several backends.</p>
+        <p>APIM creates an <code>onHandshake</code> operation where supported policies inspect the initial request. Do not assume an HTTP body transformation or validation policy runs on every subsequent WebSocket message. Policy support and connection limits must be checked for this protocol and gateway.</p>
+        <p>The Azure and developer portal consoles support connection and message testing. A successful <code>101</code> upgrade is only the start: verify messages in both directions, disconnection behavior, backend certificate trust, and diagnostic logs. WebSocket APIs are not supported in Consumption; check the current feature matrix for your target tier.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/websocket-api" target="_blank" rel="noopener">Handshake flow, testing, diagnostics, and unsupported policies</a>.</div>
+      </section>
+      <section id="design-first" class="section-card reveal"><h2>Develop Against an Agreed Contract</h2>
+        <p>In a design-first workflow, agree the operations, schemas, status codes, and examples with consumers before implementation. Import that definition and use mock responses to let frontend and backend teams work independently. A mock proves what a consumer expects; it does not prove that the real backend implements it.</p>
+        <p>For the Catalog API, a useful contract includes the list response, a single-product response, and a documented missing-product error. Include examples and schemas for each relevant response rather than documenting only <code>200</code>. Compare the generated or implemented backend with the agreed definition during integration tests.</p>
+        <p>Code generation or scaffolding can create implementation skeletons from a definition, but support depends on the selected generator, language, and runtime. The presentation's historical Functions scaffolding language list is not a guarantee of current tooling support. The required lab uses the supplied .NET 10 implementation instead of depending on that older extension workflow.</p>
+        <div class="takeaway"><h3>How to choose</h3><p>Use code-first when an implementation is your starting point; use design-first when early contract review and parallel consumer development matter. Both approaches need compatibility tests and intentional documentation.</p></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/mock-api-responses" target="_blank" rel="noopener">Mock responses before a backend is available</a> and <a href="https://learn.microsoft.com/azure/api-management/devops-api-development-templates" target="_blank" rel="noopener">Definitions, generators, and approval gates</a>.</div>
+      </section>
+      <section id="vscode" class="section-card reveal"><h2>Use VS Code for More Than Backend Editing</h2>
+        <p>The Azure API Management extension provides a resource-oriented view of your APIM services and APIs. It complements the backend language tools: editing a C# endpoint, editing an OpenAPI definition, and editing a gateway policy are different operations with different deployment effects.</p>
+        <p>Use the extension's API and policy editing capabilities alongside HTTP requests and contract inspection. XML tooling can identify structural problems, but a policy expression can still fail at gateway runtime. Keep policy source and environment-specific configuration under review before applying changes.</p>
+        <p>The current extension also supports assisted policy authoring and explanation with GitHub Copilot for Azure. Treat generated policies as drafts: check their scope, supported gateway, effective inheritance, and denied-request behavior. For step-through diagnosis, see <a href="lifecycle-and-observability.html#policy-debugging">policy debugging and its access restrictions</a>.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/visual-studio-code-tutorial" target="_blank" rel="noopener">Import and manage APIs in VS Code</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-debug-policies" target="_blank" rel="noopener">Current policy authoring and debugging</a>.</div>
+      </section>
+      <section id="next" class="section-card reveal"><h2>Next Steps</h2><p>Use <a href="../labs/lab02-import-dotnet-api-vscode.html">Lab 02</a> to generate, import, and test a Catalog contract. Use <a href="../labs/lab03-import-functions-portal.html">Lab 03</a> to import an Azure resource and inspect its backend credentials safely.</p></section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="architecture-and-tiers.html"><small>Previous</small><strong>&larr; Architecture and Service Tiers</strong></a><a class="next" href="policies-and-transformation.html"><small>Next</small><strong>Policies and Transformation &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#key-terms">Key Terms</a><a href="#how-it-works">Design Approaches</a><a href="#compatibility">Import Boundaries</a><a href="#soap">SOAP Modernization</a><a href="#websockets">WebSockets</a><a href="#design-first">Design-First and Mocks</a><a href="#vscode">VS Code Tooling</a><a href="#next">Next Steps</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

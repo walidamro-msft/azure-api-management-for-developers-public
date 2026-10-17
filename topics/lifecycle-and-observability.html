@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Lifecycle and Observability &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Choose versions or revisions for API changes, and use request tracing, metrics, and logs to diagnose gateway behavior without exposing sensitive data." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="lifecycle-and-observability">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>API Lifecycle and Observability</span></nav>
+    <header class="hero"><h1>API Lifecycle and Observability</h1><p class="subtitle">Release changes deliberately and choose evidence that tells you whether a failure belongs to the gateway or the backend.</p><div class="badge-row"><span class="badge">Operate safely</span><span class="badge">~10 min core + reference</span></div></header>
+    <div class="layout"><main class="content">
+      <div class="callout"><strong>Reading path:</strong> versions/revisions and evidence selection form the core. Deployment automation, live debugging, monitoring/reporting, and Event Grid provide extended reference.</div>
+      <section id="changes" class="section-card reveal"><h2>Versions and Revisions Solve Different Problems</h2>
+        <div class="cheat">
+          <div class="cheat-item tone-blue"><h3>Version</h3><p>Expose a distinct contract that consumers adopt explicitly. Use it for breaking changes and choose a path, header, or query versioning scheme.</p></div>
+          <div class="cheat-item tone-green"><h3>Revision</h3><p>Model and test a nonbreaking change before making it current. Consumers continue using the current revision while you validate the candidate.</p></div>
+        </div>
+        <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    A[Current revision] --> B[Candidate revision]
+    B --> T[Validate calls]
+    T --> P[Make current]
+    P --> M[Monitor outcome]
+    class A,B azure
+    class T,P success
+    class M warning
+        </pre></div>
+        <p class="diagram-caption">Blue is the existing contract and candidate. Green is validation and promotion; orange is the operational follow-through.</p>
+        <p>A revision does not make a breaking backend change safe by itself. Validate behavior and backend compatibility, not just the APIM configuration diff.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-37.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-37.png" alt="An API contains versions, each with revisions and operations; one revision is current for normal requests." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 37: read across domain, API, version, revision, and operation. A new version is a consumer choice; making a revision current is a provider release decision.</figcaption></figure>
+        <p>A versioning scheme can use a path segment such as <code>v1</code>, a query parameter, or a header. An explicitly addressed noncurrent revision uses the <code>;rev=</code> marker in its API URL. Do not confuse that marker with the version scheme or assume a new revision automatically changes which backend deployment is running.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-get-started-revise-api" target="_blank" rel="noopener">Revisions</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-get-started-publish-versions" target="_blank" rel="noopener">versions</a>.</div>
+      </section>
+      <section id="evidence" class="section-card reveal"><h2>Choose Evidence by Question</h2>
+        <div class="table-wrap"><table><thead><tr><th>Question</th><th>Start with</th><th>Inspect</th></tr></thead><tbody>
+          <tr><td>Why did this request fail?</td><td>Request trace</td><td>Inbound, backend, outbound, and on-error stages</td></tr>
+          <tr><td>Is latency or error rate changing?</td><td>Azure Monitor metrics</td><td>Time range, operation, response codes, and latency distribution</td></tr>
+          <tr><td>Which requests share a pattern?</td><td>Configured request logs</td><td>Correlation, sampling, retained fields, and backend responses</td></tr>
+          <tr><td>Where is time spent across services?</td><td>Application Insights</td><td>Instrumented dependencies and distributed traces</td></tr>
+        </tbody></table></div>
+        <p>Telemetry support, lag, retention, sampling, and configuration differ by gateway and tool. Logging is not automatically a complete audit trail, and a missing sampled event is not proof that a request never occurred.</p>
+        <div class="callout warning"><strong>Important:</strong> request traces can expose sensitive information. The legacy <code>Ocp-Apim-Trace</code> header is no longer supported; use the portal trace workflow or the documented time-limited debug-token flow.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/observability" target="_blank" rel="noopener">Observability options</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-api-inspector" target="_blank" rel="noopener">current request tracing</a>.</div>
+      </section>
+      <section id="automation" class="section-card reveal"><h2>Promote Configuration, Not Unreviewed Portal State</h2>
+        <p>Multiple teams and environments make manual changes difficult to reproduce. Treat API definitions, policies, backend references, and diagnostic settings as reviewed deployment artifacts. Parameterize environment differences instead of copying production credentials or resource addresses into development.</p>
+        <div class="table-wrap"><table><thead><tr><th>Tool or approach</th><th>Useful responsibility</th><th>Decision to make</th></tr></thead><tbody>
+          <tr><td>Management REST APIs and SDKs</td><td>Programmatic resource and API configuration</td><td>How authentication, API versions, retries, and idempotency are handled.</td></tr>
+          <tr><td>Azure CLI and PowerShell</td><td>Script repeatable management operations</td><td>How scripts report failures and avoid environment drift.</td></tr>
+          <tr><td>ARM templates and Bicep</td><td>Declare Azure infrastructure and configuration</td><td>How modules, parameters, dependencies, and secret references are reviewed.</td></tr>
+          <tr><td>Terraform</td><td>Manage infrastructure/configuration with provider resources</td><td>How state, provider support, access, and lifecycle ownership are controlled.</td></tr>
+          <tr><td>APIOps</td><td>Extract API artifacts for review and publish approved changes</td><td>Which artifacts teams own and which pipeline is the source of truth.</td></tr>
+        </tbody></table></div>
+        <p>A practical promotion model has three gates: define the contract and configuration; review compatibility, policy behavior, and security; publish the approved artifacts to the intended environment. Test the deployed gateway and backend together, and retain a rollback strategy appropriate to both.</p>
+        <p>Do not let several tools independently manage the same policy or API without an ownership rule. A portal hotfix can be overwritten by a later pipeline, and a successful deployment does not prove the consumer contract is still compatible.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/devops-api-development-templates" target="_blank" rel="noopener">API definition, approval, publication, and APIOps</a>.</div>
+      </section>
+      <section id="policy-debugging" class="section-card reveal"><h2>Choose Tracing or Live Policy Debugging</h2>
+        <p>Request tracing explains a completed request's pipeline. Live policy debugging lets you pause at a policy, step through effective statements, inspect system and user variables, and examine the scope and error at the point where it occurs. Use it to test an assumption about order or expression state, not merely to repeat a successful request.</p>
+        <p>The current VS Code workflow requires the APIM extension and REST Client extension. Policy debugging is supported only on Developer, and it uses the built-in service-level all-access subscription, which requires service-owner access. These requirements are separate from the credentials you give API consumers.</p>
+        <p>For example, when an inherited header is missing, inspect whether the relevant <code>base</code> executes and whether a later statement replaces the header. For an expression failure, inspect the variable and request state rather than adding logging of entire tokens or payloads.</p>
+        <div class="callout danger"><strong>Avoid:</strong> committing debugger-generated requests containing service keys, copying the debugging key into an application, or using an administrative debugging success as proof of consumer product-policy behavior. Stop the session when finished.</div>
+        <p>The older slide's "one debugging session" limit is not restated as a current universal guarantee; use the current documented restrictions. The required lab uses <a href="../labs/lab02-import-dotnet-api-vscode.html#test">portal request tracing</a>, so live-debugging prerequisites do not extend the four-hour required path.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-debug-policies" target="_blank" rel="noopener">Live debugging, required credentials, and restrictions</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-api-inspector" target="_blank" rel="noopener">request tracing</a>.</div>
+      </section>
+      <section id="monitoring" class="section-card reveal"><h2>Combine Metrics, Logs, Traces, and Reports</h2>
+        <p>Metrics show trends such as failures, traffic, and resource pressure; alerts make selected conditions actionable. Activity logs concern resource-management operations. Configured gateway resource logs describe runtime requests and can feed Log Analytics queries and dashboards. These are different data sources with different collection and retention choices.</p>
+        <p>Application Insights integration needs a logger connection and diagnostics enabled for the intended APIs. Instrument the backend and propagate supported correlation context for an end-to-end view; one gateway trace alone cannot explain every dependency. Review sampling, recorded headers/body fields, performance impact, ingestion cost, and retention deliberately.</p>
+        <div class="table-wrap"><table><thead><tr><th>Reporting need</th><th>Use</th><th>Watch for</th></tr></thead><tbody>
+          <tr><td>Provider API usage and performance</td><td>Azure Monitor-based analytics dashboard backed by gateway logs in Log Analytics</td><td>Configured data source, ingestion delay, and the right API/product/subscription dimensions.</td></tr>
+          <tr><td>Classic built-in reports</td><td>Legacy provider analytics in classic tiers</td><td>The announced March 2027 retirement; plan migration rather than teaching these as a permanent default.</td></tr>
+          <tr><td>Consumer usage</td><td>The developer portal's individual usage report where supported</td><td>It is not the provider's entire service report and is currently unavailable in v2 portal tiers.</td></tr>
+          <tr><td>Custom telemetry or reporting</td><td>Selected logs, queries, or Event Hubs pipelines</td><td>Your own schema, access controls, completeness, and retention; Power BI or other reporting needs its own data integration.</td></tr>
+          <tr><td>Self-hosted runtime</td><td>Supported telemetry integrations plus locally configured logs/metrics</td><td>Deployment-model differences; do not assume every managed-gateway diagnostic destination behaves identically.</td></tr>
+        </tbody></table></div>
+        <p>Use latency distributions and error rates alongside request counts. Averages can hide a slow tail, and sampling can hide an individual request. Keep sensitive bodies, credentials, and identifiers out of routine collection unless a reviewed diagnostic need and access policy justify them.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-use-azure-monitor" target="_blank" rel="noopener">Metrics, alerts, and diagnostics</a>, <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-app-insights" target="_blank" rel="noopener">Application Insights configuration</a>, <a href="https://learn.microsoft.com/azure/api-management/monitor-api-management" target="_blank" rel="noopener">analytics and retirement guidance</a>, and <a href="https://learn.microsoft.com/azure/api-management/observability" target="_blank" rel="noopener">deployment-model and consumer-report support</a>. Verified on 2026-10-16.</div>
+      </section>
+      <section id="event-grid" class="section-card reveal"><h2>React to APIM Events With Event Grid</h2>
+        <p>APIM can publish supported resource events to Event Grid so that a Logic App, Function, or webhook can react. For example, an onboarding process can respond to a supported user-created event rather than continuously polling for new users.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-48.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-48.png" alt="API Management publishes events through Event Grid to Logic Apps, Functions, or webhooks." width="700" height="240" loading="lazy" /></a><figcaption>Source presentation, slide 48, cropped to the event-flow graphic. The old GA footnote and event list are excluded; use the current event schema and tier support.</figcaption></figure>
+        <p>Distinguish control-plane notifications, such as supported API or product changes, from a request-by-request telemetry stream. Current documentation also describes preview data-plane events for backend circuit breakers and self-hosted gateway access-token lifecycle. That does not mean Event Grid emits every API call.</p>
+        <p>Choose supported event types and filters, authorize the destination, and design handlers for repeated delivery and processing failures. Use metrics and request logs for traffic analysis; use the <code>log-to-eventhub</code> policy when you need an explicit custom telemetry stream. Event Grid and Event Hubs have different roles.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/how-to-event-grid" target="_blank" rel="noopener">APIM event categories, preview status, and prerequisites</a> and <a href="https://learn.microsoft.com/azure/service-bus-messaging/compare-messaging-services" target="_blank" rel="noopener">event routing versus streaming</a>. Verified on 2026-10-16.</div>
+      </section>
+      <section id="next" class="section-card reveal"><h2>Next Steps</h2><p>Inspect a Catalog request in <a href="../labs/lab02-import-dotnet-api-vscode.html#test">Lab 02</a>. For production, review configuration changes, automate repeatable releases, and verify the effective policy and consumer contract before promotion.</p><div class="takeaway"><h3>Key takeaway</h3><p>Release safety requires both a compatibility decision and observable evidence. A successful import is only the beginning.</p></div></section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="security-and-access.html"><small>Previous</small><strong>&larr; Security and Access Control</strong></a><a class="next" href="developer-experience.html"><small>Next</small><strong>Products and Developer Experience &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#changes">Versions and Revisions</a><a href="#evidence">Choose Evidence</a><a href="#automation">Deployment Automation</a><a href="#policy-debugging">Live Policy Debugging</a><a href="#monitoring">Monitoring and Reports</a><a href="#event-grid">Event Grid</a><a href="#next">Next Steps</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

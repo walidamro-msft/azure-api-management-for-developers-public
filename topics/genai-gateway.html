@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenAI Gateway With APIM &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Design a GenAI gateway with Azure API Management: govern tokens, route model traffic, evaluate semantic caching, and protect prompts and telemetry." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" />
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="genai-gateway">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>GenAI Gateway With APIM</span></nav>
+    <header class="hero">
+      <h1>GenAI Gateway With APIM</h1>
+      <p class="subtitle">Give AI applications a governed model endpoint. Control consumption, route around unavailable backends, and decide when cached answers are safe to reuse.</p>
+      <div class="badge-row"><span class="badge">L300</span><span class="badge">Optional reference</span><span class="badge">~20 min additional</span></div>
+    </header>
+    <div class="layout">
+      <main class="content">
+        <section id="what-is" class="section-card reveal">
+          <h2>What Is an AI Gateway?</h2>
+          <div class="quote-card"><p>The AI gateway extends API Management's existing API gateway; it is not a separate offering.</p><cite>Source: Microsoft Learn, AI gateway capabilities</cite></div>
+          <p>You publish model APIs behind APIM so applications use a controlled entry point instead of distributing provider credentials to every team. You apply authentication, token budgets, routing, and observability at that boundary. Your models still run in their own hosting services.</p>
+          <div class="cheat">
+            <div class="cheat-item tone-blue"><h3>Govern Access</h3><p>Authorize consumers and authenticate the gateway to model backends. Use products and subscriptions to package access for different applications or use cases.</p></div>
+            <div class="cheat-item tone-orange"><h3>Manage Shared Capacity</h3><p>Control token consumption per consumer and choose how requests reach provisioned or pay-as-you-go deployments.</p></div>
+            <div class="cheat-item tone-purple"><h3>Evaluate AI-Specific Controls</h3><p>Add token metrics, semantic caching, and content safety where the model schema and gateway support them.</p></div>
+          </div>
+          <div class="callout"><strong>Reading path:</strong> this optional ninth module adds the requested GenAI material without changing the eight core modules, five labs, or four-hour schedule. You do not need to deploy a model or cache to complete the required workshop.</div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener">Current AI gateway capabilities</a> and the <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">APIM-based GenAI reference architecture</a>.</div>
+        </section>
+
+        <section id="how-it-works" class="section-card reveal">
+          <h2>How It Works</h2>
+          <p>Separate the consumer contract from backend selection. The gateway can front Azure OpenAI deployments and other reachable model REST endpoints; network reachability alone does not make every AI policy compatible with a custom model.</p>
+          <div class="diagram-wrap diagram-scroll" role="region" aria-label="GenAI request architecture, horizontally scrollable" tabindex="0"><pre class="mermaid">
+flowchart LR
+    C[AI application] --> G[APIM gateway]
+    G --> P[Backend pool]
+    P --> A[Provisioned model]
+    P -.-> B[Pay-as-you-go model]
+    G -.-> E[Embeddings endpoint]
+    G -.-> R[(External vector cache)]
+    G -.-> T[(Token telemetry)]
+    class C external
+    class G,P azure
+    class A,B,E accent
+    class R,T data
+          </pre></div>
+          <p class="diagram-caption">Scroll horizontally to inspect the diagram. Blue represents gateway services, purple model endpoints, teal data stores, and dashed gray the consumer. Dashed arrows show optional dependencies or fallback; they do not imply automatic failover or a specific policy order.</p>
+          <ol>
+            <li><strong>Onboard the contract:</strong> import a model API and check its schema, operations, and authentication. Current Azure OpenAI guidance supports import from Microsoft Foundry or an OpenAPI specification.</li>
+            <li><strong>Identify and authorize the consumer:</strong> validate its identity and permissions before forwarding requests or looking up shared answers.</li>
+            <li><strong>Apply the selected controls:</strong> enforce consumer budgets, optionally check a semantic cache, and select an approved backend. Authenticate backend calls separately.</li>
+            <li><strong>Observe the outcome:</strong> record latency, failures, and available token usage, including denied requests and cache behavior.</li>
+          </ol>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/azure-openai-api-from-specification" target="_blank" rel="noopener">Azure OpenAI import and authentication</a> and <a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener">AI traffic mediation and control</a>.</div>
+        </section>
+
+        <section id="key-terms" class="section-card reveal">
+          <h2>Key Terms and Capability Map</h2>
+          <p>The 2024 launch article groups the gateway around five capabilities. Use the current policy references below when implementing those ideas; the article's model examples and preview labels describe its publication date, not today's support matrix.</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Capability</th><th>Current APIM mechanism</th><th>What to inspect</th></tr></thead>
+            <tbody>
+              <tr><td>Import and backend access</td><td>Azure OpenAI API import; managed identity or protected backend credentials</td><td>Schema, deployment mapping, backend authorization, and network path.</td></tr>
+              <tr><td>Token limits and quotas</td><td><code>llm-token-limit</code>; Azure OpenAI-specific <code>azure-openai-token-limit</code> also exists</td><td>Trusted counter key, tokens per minute (TPM), period quota, and streaming behavior.</td></tr>
+              <tr><td>Token metrics</td><td><code>llm-emit-token-metric</code>; Azure OpenAI-specific <code>azure-openai-emit-token-metric</code> also exists</td><td>Application Insights integration, returned usage, and dimension cardinality.</td></tr>
+              <tr><td>Resilient backend routing</td><td>Backend pools and circuit breaker rules</td><td>Priority, weights, failure conditions, and <code>Retry-After</code>.</td></tr>
+              <tr><td>Semantic caching</td><td><code>llm-semantic-cache-lookup</code> and <code>llm-semantic-cache-store</code></td><td>Embeddings backend, external vector-compatible cache, isolation, and freshness.</td></tr>
+            </tbody>
+          </table></div>
+          <p><strong>RPM</strong> counts requests per minute; <strong>TPM</strong> counts tokens per minute. Equal request counts can consume very different token volumes. <strong>PTU</strong> means provisioned throughput unit: treat provisioned deployments as a capacity choice, not an unlimited endpoint.</p>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/introducing-genai-gateway-capabilities-in-azure-api-management/4146525" target="_blank" rel="noopener">Introducing GenAI gateway capabilities, May 2024</a>, <a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener">current capability and policy families</a>, and the <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">reference design's RPM, TPM, and PTU scenarios</a>.</div>
+        </section>
+
+        <section id="compare" class="section-card reveal">
+          <h2>Compare Cloud and Self-Hosted Gateways</h2>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Decision</th><th>Azure-managed gateway</th><th>Self-hosted gateway</th></tr></thead>
+            <tbody>
+              <tr><td>Request path</td><td>Requests pass through an Azure gateway, including calls to reachable on-premises REST model endpoints.</td><td>You place the gateway near internal applications and models. Calls to cloud models still leave that local environment.</td></tr>
+              <tr><td>Network design</td><td>Provide approved connectivity from the gateway to each backend; consider the added path for on-premises workloads.</td><td>Keep local model traffic local when configured that way; allow the required management connectivity and any cloud backend access.</td></tr>
+              <tr><td>Operational owner</td><td>Azure operates the managed gateway infrastructure; you own API configuration, selected capacity, dependencies, and monitoring.</td><td>You also operate gateway hosting, upgrades, availability, scaling, and local monitoring integration.</td></tr>
+              <tr><td>Feature checks</td><td>Verify service tier, gateway type, model schema, and each policy's usage section.</td><td>Verify the same dimensions. Do not assume feature parity with the managed gateway.</td></tr>
+            </tbody>
+          </table></div>
+          <p>The playbook's cloud and on-premises designs are architectural alternatives, not a promise that every feature runs in both places. Use the <a href="architecture-and-tiers.html#self-hosted">gateway ownership discussion</a> for the underlying APIM responsibilities.</p>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">Cloud and self-hosted GenAI designs</a> and <a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener">current capability availability</a>. Each policy reference below lists supported gateways.</div>
+        </section>
+
+        <section id="decision" class="section-card reveal">
+          <h2>How to Choose</h2>
+          <div class="diagram-wrap diagram-scroll" role="region" aria-label="Gateway decision flow, horizontally scrollable" tabindex="0"><pre class="mermaid">
+flowchart TD
+    W[AI workload] --> S{Supported model schema?}
+    S -->|No| P[Passthrough and custom controls]
+    S -->|Yes| L{Local gateway required?}
+    L -->|Yes| H[Verify self-hosted policy support]
+    L -->|No| M[Evaluate managed gateway]
+    class W accent
+    class S,L neutral
+    class P,M azure
+    class H warning
+          </pre></div>
+          <p class="diagram-caption">Scroll horizontally to inspect the diagram. Purple marks the AI workload, gray the decisions, blue gateway approaches, and orange a compatibility check. A supported schema is necessary for schema-aware policies, not sufficient proof that every policy supports the selected gateway.</p>
+          <ul class="checklist">
+            <li>Confirm the exact API shape and streaming mode, not only the model's marketing name.</li>
+            <li>Check each required policy against the chosen service tier and gateway type.</li>
+            <li>Define acceptable model, region, authorization, and data-handling boundaries before enabling fallback or caching.</li>
+          </ul>
+          <div class="takeaway"><h3>Key takeaway</h3><p>Choose a gateway placement and a tested policy set together. A reachable REST endpoint is not evidence that token accounting, semantic caching, or content safety will work unchanged.</p></div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener">Supported model schemas and capabilities</a>, <a href="https://learn.microsoft.com/azure/api-management/llm-token-limit-policy" target="_blank" rel="noopener">token policy usage</a>, and <a href="https://learn.microsoft.com/azure/api-management/llm-semantic-cache-lookup-policy" target="_blank" rel="noopener">semantic cache policy usage</a>.</div>
+        </section>
+
+        <section id="token-controls" class="section-card reveal">
+          <h2>Govern Tokens, Not Just Requests</h2>
+          <p>Combine request throttling with token controls when you need both burst protection and a consumption budget. Derive a consumer's counter key from a validated identity or an enforced APIM subscription, not a caller-supplied tenant header that anyone can change.</p>
+          <p>This illustrative inbound fragment requires an API with <strong>Subscription required</strong> enabled and a valid subscription context. The numbers are example consumer budgets, not Azure service limits. Use distinct counter keys when separate APIs or scopes need independent budgets.</p>
+          <span class="code-label">Illustrative inbound policy fragment</span>
+          <pre class="code" data-lang="text">&lt;llm-token-limit
+    counter-key="@(context.Subscription.Id)"
+    tokens-per-minute="1000"
+    token-quota="100000"
+    token-quota-period="Monthly"
+    estimate-prompt-tokens="true" /&gt;</pre>
+          <div class="cheat">
+            <div class="cheat-item tone-orange"><h3>Understand Rejection</h3><p><code>llm-token-limit</code> returns <code>429</code> when the token rate is exceeded and <code>403</code> when the configured period token quota is exceeded. Your client must distinguish these from backend failures.</p></div>
+            <div class="cheat-item tone-purple"><h3>Account for Estimation</h3><p>Prompt estimation can reject work before a backend call, at a performance cost. Without it, enforcement uses returned usage after the call. Streaming estimates both prompt and completion tokens regardless of that setting.</p></div>
+            <div class="cheat-item tone-gray"><h3>Know the Boundary</h3><p>Concurrent calls can temporarily exceed a budget. Token counts are tracked independently at each gateway, including regional and workspace gateways; they are not an instance-wide accounting ledger.</p></div>
+          </div>
+          <div class="callout warning"><strong>Important:</strong> consumer budgets do not increase a model deployment's capacity or provider quota. Test actual usage, estimated usage, concurrency, and streaming separately.</div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/llm-token-limit-policy" target="_blank" rel="noopener">Token limits, rejection codes, estimation, and gateway-local counters</a> and the <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">consumer quota reference design</a>.</div>
+        </section>
+
+        <section id="resilience" class="section-card reveal">
+          <h2>Route for Capacity and Recovery</h2>
+          <p>Use backend entities to centralize endpoint configuration and select a pool rather than scattering endpoint URLs through policies. Round-robin spreads calls evenly; weights adjust relative distribution within a group; priority groups prefer one set of backends before another.</p>
+          <p>For a PTU-first design, place provisioned deployments in the preferred priority group and eligible pay-as-you-go deployments in a lower-priority group. Configure circuit breakers for the relevant failure conditions, including backend throttling, and accept the backend's <code>Retry-After</code> duration when appropriate.</p>
+          <div class="callout warning"><strong>Important:</strong> lower-priority pool members are used only when all backends in higher-priority groups are unavailable because their circuit breakers have tripped. Priority alone is not a token-capacity sensor, and a breaker does not itself replay the failed request.</div>
+          <ul>
+            <li><strong>Keep retries bounded:</strong> define retryable failures and a total latency budget. An ambiguous failure can mean the model already performed work; do not assume another attempt is free.</li>
+            <li><strong>Check compatibility:</strong> fallback deployments must support the required API, model behavior, deployment mapping, and authorization. Stateful conversations may need affinity or an explicit migration strategy.</li>
+            <li><strong>Protect residency:</strong> approve fallback regions and providers before enabling them. A gateway in one region does not guarantee where models, caches, safety services, and logs process data.</li>
+            <li><strong>Design for exhaustion:</strong> return an explicit failure when no eligible backend has capacity. Spillover improves options; it cannot guarantee every request completes.</li>
+          </ul>
+          <p>Backend load distribution and circuit-breaker decisions are approximate across distributed gateway instances. Validate behavior under load rather than treating a pool as a globally synchronized scheduler.</p>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/backends" target="_blank" rel="noopener">Backend pools, priority, session awareness, and circuit breakers</a> and the <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">PTU/PAYG, retry, and data-sovereignty design considerations</a>.</div>
+        </section>
+
+        <section id="semantic-cache" class="section-card reveal">
+          <h2>Evaluate Semantic Caching</h2>
+          <p>Semantic caching can reuse a completion for a prompt with similar meaning, rather than requiring identical text. It needs an embeddings endpoint and a compatible external cache; it is not the gateway's ordinary built-in HTTP response cache. Current setup guidance uses Azure Managed Redis with RediSearch.</p>
+          <div class="diagram-wrap diagram-scroll" role="region" aria-label="Semantic caching flow, horizontally scrollable" tabindex="0"><pre class="mermaid">
+flowchart LR
+    A[Authorized request] --> E[Embed prompt]
+    E --> Q{Suitable cache hit?}
+    Q -->|Yes| C[Return cached answer]
+    Q -->|No| M[Call approved model]
+    M --> S[Store eligible answer]
+    S --> R[Return answer]
+    class A azure
+    class E,M accent
+    class Q neutral
+    class S data
+    class C,R success
+          </pre></div>
+          <p class="diagram-caption">Scroll horizontally to inspect the diagram. Blue is the authorized entry, purple model work, gray the cache decision, teal storage, and green returned results. A cache hit can avoid generation but still requires embedding and lookup work.</p>
+          <ul>
+            <li><strong>Pair lookup and store:</strong> use <code>llm-semantic-cache-lookup</code> inbound and the corresponding store policy outbound. Size and authorize the embeddings backend independently.</li>
+            <li><strong>Partition deliberately:</strong> use <code>vary-by</code> to separate trusted tenant or user authorization contexts. Include model, system-prompt version, or knowledge version when changing them would invalidate an answer.</li>
+            <li><strong>Evaluate correctness:</strong> tune the score threshold with real prompt pairs, define a suitable lifetime, and bypass caching for personalized or sensitive answers that cannot be safely reused.</li>
+            <li><strong>Protect cache misses:</strong> retain authentication and abuse controls before lookup, and follow the documented recommendation to rate-limit after lookup so a cache outage does not overwhelm the model.</li>
+          </ul>
+          <div class="callout danger"><strong>Avoid:</strong> sharing answers across authorization boundaries, treating similarity as proof of correctness, or assuming embedding and cache storage cannot contain sensitive information.</div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/azure-openai-enable-semantic-caching" target="_blank" rel="noopener">Semantic cache prerequisites and lookup/store flow</a> and <a href="https://learn.microsoft.com/azure/api-management/llm-semantic-cache-lookup-policy" target="_blank" rel="noopener">partitioning, thresholds, and cache-failure protection</a>.</div>
+        </section>
+
+        <section id="best-practices" class="section-card reveal">
+          <h2>Protect Prompts and Trust Boundaries</h2>
+          <div class="cheat">
+            <div class="cheat-item tone-green"><h3>Separate Two Identities</h3><p>Validate consumer tokens and required permissions at the gateway. Use the gateway's managed identity for supported model backends, with the appropriate resource-scoped role. Current Azure OpenAI guidance uses <strong>Cognitive Services OpenAI User</strong>.</p></div>
+            <div class="cheat-item tone-green"><h3>Handle PII Explicitly</h3><p>Managed identity authenticates a caller; it does not detect or redact personally identifiable information. The playbook describes an external processing component, such as a Function calling Azure Language PII detection, for that responsibility.</p></div>
+            <div class="cheat-item tone-green"><h3>Evaluate Content Safety</h3><p><code>llm-content-safety</code> calls Azure AI Content Safety to check configured harmful-content categories and prompt attacks. Treat content safety, PII redaction, and authorization as separate controls.</p></div>
+          </div>
+          <p>Document which components may see prompts and completions, including embeddings, caches, safety checks, and telemetry. If a required safety or redaction dependency is unavailable, define an explicit rejection path instead of silently forwarding unprocessed content.</p>
+          <p>Restrict policy-editing permissions as well as backend credentials: policy authors can reference configured embeddings or safety backends and invoke them with their configured authentication.</p>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-authenticate-authorize-ai-apis" target="_blank" rel="noopener">Consumer authorization and backend managed identity</a>, <a href="https://learn.microsoft.com/azure/api-management/llm-content-safety-policy" target="_blank" rel="noopener">content safety and backend-access considerations</a>, <a href="https://learn.microsoft.com/azure/ai-services/language-service/personally-identifiable-information/overview" target="_blank" rel="noopener">PII detection and redaction</a>, and the <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">PII reference design</a>.</div>
+        </section>
+
+        <section id="observability" class="section-card reveal">
+          <h2>Observe Usage Without Leaking Content</h2>
+          <p>Use <code>llm-emit-token-metric</code> with the required Application Insights integration to emit available token usage. Choose bounded dimensions such as an approved application or cost-center classification; avoid prompt text and unbounded user-generated values.</p>
+          <p>Azure Monitor language-model logs can record model information and token usage, with optional prompt and completion capture. Start with the minimum data needed; explicitly approve message capture, retention, and log access before enabling it.</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Question</th><th>Evidence to retain</th><th>Interpretation boundary</th></tr></thead>
+            <tbody>
+              <tr><td>Who consumes shared capacity?</td><td>Trusted consumer classification, model/backend, available token categories</td><td>Model and provider determine available usage fields. Do not treat estimates as an exact invoice.</td></tr>
+              <tr><td>Why was a request denied?</td><td>Gateway status, applicable policy, backend status, correlation identifier</td><td>Separate consumer budget exhaustion, authorization failures, safety rejection, and provider throttling.</td></tr>
+              <tr><td>Does fallback help?</td><td>Selected backend, latency, failures, breaker state, and retry outcomes</td><td>Check the added latency, model compatibility, and approved processing locations.</td></tr>
+              <tr><td>Does caching help safely?</td><td>Hit/miss outcomes, latency, usage trends, and evaluated answer quality</td><td>Generation savings alone do not prove correctness or isolation.</td></tr>
+            </tbody>
+          </table></div>
+          <div class="callout warning"><strong>Important:</strong> interrupted streams and missing usage fields can make token telemetry incomplete or inaccurate. Use gateway metrics for operational showback, and reconcile any chargeback with provider usage and the agreed accounting rules.</div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/llm-emit-token-metric-policy" target="_blank" rel="noopener">Token metrics, dimensions, and streaming caveats</a>, <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-llm-logs" target="_blank" rel="noopener">language-model logging and analytics</a>, and the <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">observability and chargeback reference design</a>.</div>
+        </section>
+
+        <section id="next" class="section-card reveal">
+          <h2>Next Steps</h2>
+          <p>Explain which identity owns a token budget, which backends may receive a prompt, and what happens when both cache and preferred model are unavailable. Then revisit <a href="policies-and-transformation.html">policy execution</a>, <a href="security-and-access.html">trust boundaries</a>, and <a href="lifecycle-and-observability.html">diagnostics</a> before designing a production AI gateway.</p>
+          <p>The <a href="api-center.html">API Center module</a> explains portfolio inventory; cataloging an AI endpoint does not put it behind runtime controls. Continue with the <a href="../labs/index.html">five-lab path</a> for the required workshop. No extra AI deployment is part of those labs.</p>
+          <div class="callout learn"><strong>Learn more:</strong> read the supplied <a href="https://techcommunity.microsoft.com/blog/integrationsonazureblog/introducing-genai-gateway-capabilities-in-azure-api-management/4146525" target="_blank" rel="noopener">2024 introduction</a> for the original five capabilities and the supplied <a href="https://learn.microsoft.com/ai/playbook/solutions/genai-gateway/reference-architectures/apim-based" target="_blank" rel="noopener">APIM reference architecture</a> for design alternatives. Use the <a href="https://learn.microsoft.com/azure/api-management/genai-gateway-capabilities" target="_blank" rel="noopener">current AI gateway documentation</a> and policy references for implementation. Sources verified on 2026-10-16; historical preview labels, model lists, and claims of guaranteed spillover or universal gateway parity are not current support guarantees.</div>
+        </section>
+
+        <nav class="pager" aria-label="Workshop pagination">
+          <a class="prev" href="api-center.html"><small>Previous</small><strong>&larr; API Center and API Governance</strong></a>
+          <a class="next" href="../labs/index.html"><small>Next</small><strong>Labs Overview &rarr;</strong></a>
+        </nav>
+      </main>
+      <aside class="toc" aria-label="Table of contents">
+        <h3>On This Page</h3>
+        <a href="#what-is">AI Gateway</a>
+        <a href="#how-it-works">Request Architecture</a>
+        <a href="#key-terms">Terms and Capabilities</a>
+        <a href="#compare">Gateway Placement</a>
+        <a href="#decision">How to Choose</a>
+        <a href="#token-controls">Token Governance</a>
+        <a href="#resilience">Routing and Recovery</a>
+        <a href="#semantic-cache">Semantic Caching</a>
+        <a href="#best-practices">Security and Privacy</a>
+        <a href="#observability">Usage and Telemetry</a>
+        <a href="#next">Next Steps</a>
+      </aside>
+    </div>
+  </div>
+  <script type="module" src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Understand where Azure API Management and API Center fit, then follow a four-hour learning path from API publishing to discovery and governance." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" />
+  <link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="overview">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>Overview</span></nav>
+    <header class="hero">
+      <h1>Overview</h1>
+      <p class="subtitle">Publish a consistent API experience, protect calls at runtime, and make your APIs discoverable across your organization.</p>
+      <div class="badge-row"><span class="badge">Developers and architects</span><span class="badge">L300</span><span class="badge">~5 min core + reference</span></div>
+    </header>
+    <div class="layout">
+      <main class="content">
+        <div class="callout"><strong>Reading path:</strong> use the service comparison and learning path for the four-hour core. The API foundations, integration context, and lifecycle map provide extended reference from the source presentation.</div>
+        <section id="api-foundations" class="section-card reveal">
+          <h2>Start With the API Contract</h2>
+          <p>An API gives a consumer a defined way to request behavior or data from a backend. For an HTTP API, the contract includes operations, paths, parameters, payloads, and responses. A consumer depends on that contract, not on the backend's internal code or hosting platform.</p>
+          <p>Without a shared management layer, each team can end up implementing its own authentication, traffic controls, documentation, and diagnostics. Different protocols and credentials make consumption harder, while inconsistent versioning and ownership increase maintenance effort. A gateway centralizes configured runtime concerns; an inventory makes the portfolio visible.</p>
+          <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-05.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-05.png" alt="Consumers connect separately to heterogeneous REST and SOAP backends across development, test, and production." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 5: notice how consumers must accommodate many backend interfaces. Select the image to inspect it at full size.</figcaption></figure>
+          <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-07.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-07.png" alt="API Management presents a gateway facade over Azure and on-premises backend services." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 7: the gateway provides a managed facade. This conceptual view does not imply that one instance isolates every environment or automatically secures every connection.</figcaption></figure>
+          <div class="table-wrap"><table><thead><tr><th>Problem</th><th>Design response</th><th>Responsibility that remains</th></tr></thead><tbody>
+            <tr><td>Inconsistent access controls</td><td>Apply shared gateway authentication and validation policies.</td><td>Authorize business actions and protect direct backend access.</td></tr>
+            <tr><td>Uncontrolled load and cost</td><td>Use traffic controls and suitable caching.</td><td>Capacity planning, budget monitoring, and cache-failure behavior.</td></tr>
+            <tr><td>Limited visibility</td><td>Collect runtime evidence and maintain API inventory.</td><td>Configure telemetry, ownership, retention, and incident response.</td></tr>
+            <tr><td>Repeated integration work</td><td>Publish stable contracts, documentation, and onboarding.</td><td>Review compatibility and keep definitions aligned with implementations.</td></tr>
+          </tbody></table></div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">API scenarios, facade, and lifecycle capabilities</a>.</div>
+        </section>
+        <section id="what-is" class="section-card reveal">
+          <h2>Two Complementary Services</h2>
+          <p><strong>Azure API Management</strong> gives you a gateway, a management plane, and a developer portal for publishing and operating APIs. You can apply cross-cutting behavior without embedding every concern in each backend.</p>
+          <p><strong>Azure API Center</strong> gives you an organization-wide inventory for discovery and design-time governance. An API can be inventoried before it is deployed, or while it runs behind another gateway.</p>
+          <div class="cheat">
+            <div class="cheat-item tone-blue"><h3>Publish</h3><p>Expose a stable frontend API while its backend evolves.</p></div>
+            <div class="cheat-item tone-green"><h3>Consume</h3><p>Discover documentation, request access, and try operations.</p></div>
+            <div class="cheat-item tone-purple"><h3>Govern</h3><p>Track contracts, versions, ownership metadata, and deployments.</p></div>
+          </div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">API Management overview</a> and <a href="https://learn.microsoft.com/azure/api-center/frequently-asked-questions" target="_blank" rel="noopener">API Management and API Center compared</a>.</div>
+        </section>
+        <section id="how-it-works" class="section-card reveal">
+          <h2>Separate Runtime From Inventory</h2>
+          <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    C[API consumer] --> G[APIM gateway]
+    G --> B[Backend API]
+    P[API publisher] -.-> G
+    P -.-> I[API Center inventory]
+    class C,P external
+    class G,B azure
+    class I accent
+          </pre></div>
+          <p class="diagram-caption">Blue services carry API traffic. Purple inventory stores API information; it is not a hop in the request path. Dashed gray actors publish or consume APIs.</p>
+          <div class="takeaway"><h3>Key takeaway</h3><p>Use APIM to control API execution. Use API Center to know which APIs exist and how they are represented. Use both when you need both outcomes.</p></div>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-center/overview" target="_blank" rel="noopener">API Center capabilities</a>.</div>
+        </section>
+        <section id="integration-context" class="section-card reveal">
+          <h2>Place APIM Among Integration Services</h2>
+          <p>Use APIM to expose and govern an API, not as a replacement for its implementation or for every integration pattern. Your API can front a workflow, a function, an application, or a legacy service.</p>
+          <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-10.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-10.png" alt="Integration services combine API exposure, workflows, compute, data movement, events, and messaging." width="1200" height="690" loading="lazy" /></a><figcaption>Source presentation, slide 10, cropped to the service-role illustration. The dated analyst-ranking footnote is excluded; the services have complementary responsibilities.</figcaption></figure>
+          <div class="table-wrap"><table><thead><tr><th>Service</th><th>Primary role in this picture</th></tr></thead><tbody>
+            <tr><td>API Management</td><td>Publish an API facade and apply runtime policies.</td></tr>
+            <tr><td>Logic Apps</td><td>Orchestrate workflows and connect systems.</td></tr>
+            <tr><td>Azure Functions</td><td>Run the code that implements event-driven or HTTP-triggered behavior.</td></tr>
+            <tr><td>Data Factory</td><td>Orchestrate data integration and ETL/ELT pipelines.</td></tr>
+            <tr><td>Service Bus</td><td>Broker enterprise application messages.</td></tr>
+            <tr><td>Event Hubs</td><td>Ingest and process event streams.</td></tr>
+            <tr><td>Event Grid</td><td>Route notifications to interested event handlers.</td></tr>
+          </tbody></table></div>
+          <p>For example, expose an order API through APIM, implement its workflow with Logic Apps or code, and use messaging for asynchronous work. Gateway policies should not become a hidden replacement for a complex business process.</p>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">APIM scenarios</a>, <a href="https://learn.microsoft.com/azure/logic-apps/logic-apps-enterprise-integration-overview" target="_blank" rel="noopener">workflow integration</a>, <a href="https://learn.microsoft.com/azure/data-factory/introduction" target="_blank" rel="noopener">data integration</a>, and <a href="https://learn.microsoft.com/azure/service-bus-messaging/compare-messaging-services" target="_blank" rel="noopener">messaging and event-service comparison</a>.</div>
+        </section>
+        <section id="lifecycle-map" class="section-card reveal">
+          <h2>Follow the Full API Lifecycle</h2>
+          <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-13.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-13.png" alt="API lifecycle cycles through design, develop, secure, publish, scale, monitor, and analyze." width="570" height="560" loading="lazy" /></a><figcaption>Source presentation, slide 13, cropped to the lifecycle graphic. Operational feedback informs the next contract and release.</figcaption></figure>
+          <ul>
+            <li><strong>Design and develop:</strong> review contracts, import definitions or Azure resources, and mock responses in <a href="api-design-and-import.html">API Design and Import</a>.</li>
+            <li><strong>Secure:</strong> separate identity and backend trust in <a href="security-and-access.html">Security</a>; validate and transform messages in <a href="policies-and-transformation.html">Policies</a>.</li>
+            <li><strong>Publish:</strong> offer products and consumer onboarding in <a href="developer-experience.html">Developer Experience</a>; manage versions, revisions, and deployment automation in <a href="lifecycle-and-observability.html">Lifecycle</a>.</li>
+            <li><strong>Scale:</strong> choose gateway placement, capacity, regions, and zones in <a href="architecture-and-tiers.html">Architecture</a>; reduce unnecessary backend work with <a href="policies-and-transformation.html#caching">caching</a>.</li>
+            <li><strong>Monitor and analyze:</strong> combine traces, metrics, logs, reports, and operational events in <a href="lifecycle-and-observability.html#monitoring">Observability</a>. Use that evidence to improve the next release.</li>
+          </ul>
+          <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">Lifecycle capabilities and stakeholders</a>.</div>
+        </section>
+        <section id="path" class="section-card reveal">
+          <h2>Your Learning Path</h2>
+          <p>Follow eight core concept modules and five labs. You deploy a non-production Developer-tier APIM instance, publish a .NET 10 Catalog API and an HTTP-triggered function, customize the developer portal, and inventory the Catalog API in API Center.</p>
+          <p>The four-hour schedule includes 85 minutes of concepts, 130 minutes of active lab work, a 10-minute break, and 15 minutes for cleanup and recap. Provisioning waits and tool installation are not included in active lab time.</p>
+          <p>Extended reference sections cover the wider source presentation. A ninth, optional <a href="genai-gateway.html">GenAI gateway module</a> adds token governance, model routing, caching, and privacy. Reading or teaching these extensions is additional to the four-hour core; the five required labs are unchanged.</p>
+          <div class="callout warning"><strong>Before you begin:</strong> complete the <a href="../labs/index.html#prework">lab prework</a>. Developer-tier provisioning must finish before Lab 02. Azure resources incur charges; use a dedicated, disposable resource group.</div>
+          <p><a href="../labs/lab01-deploy-apim-portal.html">Lab 01: Deploy Developer SKU API Management</a> starts the hands-on path.</p>
+        </section>
+        <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="../index.html"><small>Previous</small><strong>&larr; Home</strong></a><a class="next" href="architecture-and-tiers.html"><small>Next</small><strong>Architecture and Service Tiers &rarr;</strong></a></nav>
+      </main>
+      <aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#api-foundations">API Foundations</a><a href="#what-is">Two Services</a><a href="#how-it-works">Runtime and Inventory</a><a href="#integration-context">Integration Services</a><a href="#lifecycle-map">Full Lifecycle</a><a href="#path">Learning Path</a></aside>
+    </div>
+  </div>
+  <script type="module" src="../assets/site.js"></script>
+</body>
+</html>

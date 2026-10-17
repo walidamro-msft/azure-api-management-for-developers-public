@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products and Developer Experience &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Connect APIM APIs, products, groups, and subscriptions to a published developer portal that consumers can discover, subscribe to, and test." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="developer-experience">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>Products and Developer Experience</span></nav>
+    <header class="hero"><h1>Products and Developer Experience</h1><p class="subtitle">Package access intentionally and verify the published experience as a consumer, not only as an administrator.</p><div class="badge-row"><span class="badge">Developer portal</span><span class="badge">~10 min core + reference</span></div></header>
+    <div class="layout"><main class="content">
+      <div class="callout"><strong>Reading path:</strong> building blocks, consumer journey, and discovery surfaces form the core. Product relationships, portal extensibility, reports, and Power Platform provide extended reference.</div>
+      <section id="building-blocks" class="section-card reveal"><h2>Connect the Building Blocks</h2>
+        <div class="table-wrap"><table><thead><tr><th>Building block</th><th>Role</th></tr></thead><tbody>
+          <tr><td>API</td><td>The frontend operations and contract you expose.</td></tr>
+          <tr><td>Product</td><td>A bundle of APIs offered to a group of consumers. An API can appear in multiple products.</td></tr>
+          <tr><td>Group</td><td>A way to organize developer access and product visibility.</td></tr>
+          <tr><td>Subscription</td><td>A named container for a pair of access keys, scoped to a product, API, or all APIs.</td></tr>
+          <tr><td>Portal content</td><td>Pages, styling, and navigation you publish alongside API Management data.</td></tr>
+        </tbody></table></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-terminology" target="_blank" rel="noopener">Terminology</a>, <a href="https://learn.microsoft.com/azure/api-management/api-management-subscriptions" target="_blank" rel="noopener">subscription scopes</a>, and <a href="https://learn.microsoft.com/azure/api-management/developer-portal-overview" target="_blank" rel="noopener">portal architecture</a>.</div>
+      </section>
+      <section id="journey" class="section-card reveal"><h2>Design the Consumer Journey</h2>
+        <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    P[Published product] --> D[Discover APIs]
+    D --> S[Request subscription]
+    S --> A[Access approved]
+    A --> C[Call gateway]
+    class P azure
+    class D,S neutral
+    class A,C success
+        </pre></div>
+        <p class="diagram-caption">Blue is the published offering. Gray steps are consumer actions; green is approved access and successful use.</p>
+        <p>Choose whether subscriptions need approval and who can see the product. The portal's profile experience shows product-scoped subscriptions; do not assume every administrative subscription appears there.</p>
+        <div class="callout warning"><strong>Important:</strong> saving portal edits and publishing the portal are separate actions. An API working in the Azure portal test console does not prove that a consumer can discover or call it from the published portal.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-developer-portal-customize" target="_blank" rel="noopener">Customize and publish</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-subscriptions" target="_blank" rel="noopener">consumer subscriptions</a>.</div>
+      </section>
+      <section id="decision" class="section-card reveal"><h2>Choose the Right Discovery Surface</h2>
+        <p>The APIM developer portal supports consumption of the APIs you publish through that APIM service. API Center provides a broader inventory across lifecycle stages and deployment locations, with its own discovery experiences.</p>
+        <div class="takeaway"><h3>Key takeaway</h3><p>A good portal is more than branding. Consumers need useful operation descriptions, realistic examples, clear access rules, and a test path that works with their credentials.</p></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-center/frequently-asked-questions" target="_blank" rel="noopener">APIM and API Center portal roles</a>.</div>
+        <p>Build the published journey in <a href="../labs/lab04-developer-portal-portal.html">Lab 04</a>.</p>
+      </section>
+      <section id="product-model" class="section-card reveal"><h2>Model Product Access and Visibility Separately</h2>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-38.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-38.png" alt="Products bundle overlapping sets of APIs for consumers while management and gateway responsibilities remain separate." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 38: the same API can appear in more than one offering without duplicating its implementation.</figcaption></figure>
+        <p>A product packages APIs for a consumer audience. For example, partner and internal products can expose overlapping API sets while using different visibility and subscription-approval choices. Publishing a product, granting visibility, and approving a subscription are different actions.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-39.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-39.png" alt="Users belong to groups, groups see products, products contain APIs, and subscriptions grant scoped key-based access." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 39: follow each relationship rather than treating a group as a runtime credential. Azure AD in this historical diagram is now Microsoft Entra ID; the drawing emphasizes product-scoped subscriptions, not every supported subscription scope.</figcaption></figure>
+        <p>Built-in groups are <strong>Administrators</strong>, <strong>Developers</strong>, and <strong>Guests</strong>. Custom groups and supported external Microsoft Entra groups can organize product visibility. A developer can belong to more than one group, but group visibility is not itself proof that an API call is authorized.</p>
+        <p>Subscriptions can be scoped to a product, one API, or all APIs. An application should use its intended consumer scope rather than an administrator's all-access key. Confirm approval state and effective policies with that actual subscription; see <a href="policies-and-transformation.html#scopes">the product-policy inheritance exception</a>.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-create-groups" target="_blank" rel="noopener">Groups and product visibility</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-subscriptions" target="_blank" rel="noopener">subscription scopes and key access</a>.</div>
+      </section>
+      <section id="portal-options" class="section-card reveal"><h2>Customize the Portal Before Taking Over Its Hosting</h2>
+        <p>The portal combines code and content. Widgets, styling definitions, a rendering engine, and the visual editor provide the experience; pages, media, layouts, styles, and settings provide portal content. APIs, products, operations, and subscriptions come from APIM data, not from manually duplicating API descriptions on a page.</p>
+        <div class="table-wrap"><table><thead><tr><th>Need</th><th>Option</th><th>Ownership</th></tr></thead><tbody>
+          <tr><td>Branding, navigation, onboarding text, API lists</td><td>Managed portal visual editor, layouts, styles, and existing widgets</td><td>You maintain content and publication; the service maintains the managed portal.</td></tr>
+          <tr><td>Small embedded content or custom functionality</td><td>Custom HTML widget or a developed custom widget</td><td>You review and maintain the customization and its dependencies.</td></tr>
+          <tr><td>Changes to the core portal code</td><td>Open-source contribution or a self-hosted fork</td><td>A self-hosted fork adds deployment, hosting, maintenance, and update responsibilities.</td></tr>
+        </tbody></table></div>
+        <p>Start with the managed experience and only self-host when the requirement needs core-code changes. Self-hosting is not simply a styling switch and does not preserve every managed feature; current documentation specifically distinguishes support for portal content visibility/access controls. Validate those requirements before committing to a fork.</p>
+        <p>Portal deployment can be automated, but portal content publication and API configuration deployment remain separate concerns. Review content and data together, then test the published consumer experience after promotion. <a href="../labs/lab04-developer-portal-portal.html">Lab 04</a> covers the managed-editor procedure without adding a self-hosted deployment.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/developer-portal-overview" target="_blank" rel="noopener">Portal architecture, widgets, extensibility, and visibility support</a> and <a href="https://learn.microsoft.com/azure/api-management/automate-portal-deployments" target="_blank" rel="noopener">portal deployment automation</a>.</div>
+      </section>
+      <section id="consumption-channels" class="section-card reveal"><h2>Support Consumption Beyond the API List</h2>
+        <p>Consumer-facing usage reports help developers understand their own calls; provider analytics support service-wide operation. They are different reporting surfaces with tier and data-source constraints. Use the canonical <a href="lifecycle-and-observability.html#monitoring">monitoring and reports comparison</a> before promising a report to consumers.</p>
+        <p>For Power Platform consumers, APIM can export an API as a custom connector for an intended Power Platform environment. This is another consumption channel, not another backend deployment or an automatic grant of access. Review connector authentication, subscription requirements, and lifecycle ownership alongside the published contract.</p>
+        <p>A useful onboarding experience answers four questions: what can I call, how do I obtain access, what does a successful request look like, and how do I diagnose a denied request? Keep code examples and documentation aligned with the same contract you test at the gateway.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/observability" target="_blank" rel="noopener">Consumer and provider reporting</a> and <a href="https://learn.microsoft.com/azure/api-management/export-api-power-platform" target="_blank" rel="noopener">Power Platform custom connectors</a>.</div>
+      </section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="lifecycle-and-observability.html"><small>Previous</small><strong>&larr; API Lifecycle and Observability</strong></a><a class="next" href="api-center.html"><small>Next</small><strong>API Center and API Governance &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#building-blocks">Building Blocks</a><a href="#journey">Consumer Journey</a><a href="#decision">Discovery Surfaces</a><a href="#product-model">Products, Groups, Subscriptions</a><a href="#portal-options">Portal Extensibility</a><a href="#consumption-channels">Reports and Power Platform</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hands-on Labs &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Prepare for five connected APIM and API Center labs: install tools, provision Developer APIM, prepare an HTTP Function, and use consistent resource names." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="labs">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Labs</span></nav>
+    <header class="hero"><h1>Hands-on Labs</h1><p class="subtitle">Publish a small API platform, prove its consumer experience, and record it in an API inventory.</p><div class="badge-row"><span class="badge">5 connected labs</span><span class="badge">L300</span><span class="badge">~130 min active</span></div></header>
+    <div class="layout"><main class="content">
+      <section id="choose" class="section-card reveal"><h2>Follow the Connected Path</h2><p>Complete the labs in order using one disposable environment. The required path uses classic Developer APIM, a .NET 10 App Service backend, a prepared HTTP-triggered function, the APIM developer portal, and API Center Free.</p><div class="callout warning"><strong>Important:</strong> Azure resources incur charges. Do not use production data, shared groups, or credentials in source control. Keep resources until the dependent lab finishes, then follow <a href="lab05-api-center-portal.html#cleanup">final cleanup</a>.</div></section>
+      <section id="catalog" class="section-card reveal"><h2>Lab Catalog</h2><div class="table-wrap"><table><thead><tr><th>Lab</th><th>Tool</th><th>Active time</th><th>Result</th></tr></thead><tbody>
+        <tr><td><a href="lab01-deploy-apim-portal.html">01: Deploy Developer SKU APIM</a></td><td>Portal</td><td>15 min</td><td>Ready APIM instance; provision as prework</td></tr>
+        <tr><td><a href="lab02-import-dotnet-api-vscode.html">02: Import a .NET 10 API</a></td><td>VS Code + portal</td><td>40 min</td><td>Catalog contract, deployed backend, tested policy</td></tr>
+        <tr><td><a href="lab03-import-functions-portal.html">03: Import Azure Functions</a></td><td>Portal</td><td>25 min</td><td>Function import, credential reference, 429 test</td></tr>
+        <tr><td><a href="lab04-developer-portal-portal.html">04: Publish the Developer Portal</a></td><td>Portal</td><td>25 min</td><td>Published product and consumer subscription</td></tr>
+        <tr><td><a href="lab05-api-center-portal.html">05: Inventory APIs in API Center</a></td><td>Portal</td><td>25 min</td><td>API definition and deployment inventory</td></tr>
+      </tbody></table></div><p>These estimates assume prework is complete. The four-hour session also includes 85 minutes of concepts, a 10-minute break, and 15 minutes for cleanup and recap. Cloud operations may take longer.</p></section>
+      <section id="prework" class="section-card reveal"><h2>Complete the Prework</h2><ol>
+        <li>Confirm an approved subscription, spending limits, resource-provider access, and allowed regions with your administrator. APIM, App Service, Functions/storage, and API Center must be permitted.</li>
+        <li>Install Git, PowerShell 7, VS Code, .NET 10 SDK, and Azure CLI. Install the Azure Functions and C# extensions if preparing the C# function below.</li>
+        <li>Clone the workshop repository and open it in VS Code:</li>
+      </ol><span class="code-label">PowerShell</span><pre class="code" data-lang="powershell">git clone https://github.com/walidamro-msft/azure-api-management-for-developers.git
+Set-Location .\azure-api-management-for-developers
+code .
+dotnet --list-sdks
+az version</pre>
+        <ol start="4"><li>Choose a short lowercase alphanumeric <code>&lt;suffix&gt;</code> and use <code>rg-apim-workshop-&lt;suffix&gt;</code> for disposable resources.</li><li>Complete <a href="lab01-deploy-apim-portal.html">Lab 01</a> before the session and verify the resource is ready. The guided session revisits that deployment rather than creating a duplicate.</li><li>Complete the Function prework below before Lab 03.</li><li>Build <code>samples\CatalogApi\CatalogApi.csproj</code> to confirm NuGet access before the session.</li><li>Prepare an email account you control for developer portal signup. Do not put personal details in shared screenshots.</li></ol>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/get-started-create-service-instance" target="_blank" rel="noopener">APIM provisioning</a> and <a href="https://learn.microsoft.com/azure/app-service/quickstart-dotnetcore" target="_blank" rel="noopener">.NET 10 App Service prerequisites</a>.</div>
+      </section>
+      <section id="function-prework" class="section-card reveal"><h2>Prepare the HTTP Function</h2>
+        <p>Use the current <a href="https://learn.microsoft.com/azure/azure-functions/how-to-create-function-vs-code?pivots=programming-language-csharp" target="_blank" rel="noopener">C# Functions quickstart</a> to create and deploy a minimal HTTP trigger. This is a separate app from the .NET 10 Catalog API; follow the Function runtime and SDK requirements in that quickstart rather than assuming the same target framework.</p>
+        <ol><li>Install the quickstart's required .NET SDK and Azure Functions Core Tools.</li><li>In VS Code, run <strong>Azure Functions: Create New Project</strong> in a separate local folder.</li><li>Choose C# and a supported <strong>.NET isolated</strong> runtime, then an <strong>HTTP trigger</strong> named <code>Availability</code>.</li><li>Select <strong>Function</strong> authorization. Keep the generated template response; no business logic is required.</li><li>Run the function locally as described in the quickstart and confirm an HTTP GET with <code>?name=Catalog</code> returns 200.</li><li>Create and deploy to <code>func-apim-workshop-&lt;suffix&gt;</code> using the quickstart's supported hosting plan in the workshop subscription. Place its Function App, storage, and monitoring resources in the dedicated workshop group wherever the creation flow allows.</li><li>Test the deployed function with its authorized test workflow. Store any necessary credential only locally; record the expected 200 response, not the key-bearing URL.</li><li>Record any supporting resources created outside the group so you can remove those exact workshop-owned resources later.</li></ol>
+        <p><strong>Expected result:</strong> Lab 03 can discover a deployed HTTP function with Function authorization in your subscription. If you already have an approved prepared function meeting those conditions, use it instead of creating another app.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/azure-functions/how-to-create-function-vs-code?pivots=programming-language-csharp" target="_blank" rel="noopener">Function creation, runtime prerequisites, and deployment</a> and <a href="https://learn.microsoft.com/azure/api-management/import-function-app-as-api" target="_blank" rel="noopener">APIM import constraints</a>.</div>
+      </section>
+      <section id="readiness" class="section-card reveal"><h2>Readiness Check</h2><ul class="checklist"><li>APIM is ready on classic Developer tier.</li><li>The Catalog sample builds using .NET 10.</li><li>A deployed HTTP Function returns 200 and uses Function authorization.</li><li>You know which subscription and resource group each lab uses.</li><li>You can use an approved region and review plan costs before deploying.</li></ul><div class="takeaway"><h3>Keep Secrets Local</h3><p>APIM subscription keys and Function host keys are credentials. Do not add them to the repository, command history, screenshots, or API Center deployment URLs.</p></div></section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="../topics/genai-gateway.html"><small>Previous (optional reference)</small><strong>&larr; GenAI Gateway With APIM</strong></a><a class="next" href="lab01-deploy-apim-portal.html"><small>Next</small><strong>Lab 01: Deploy APIM &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#choose">Connected Path</a><a href="#catalog">Lab Catalog</a><a href="#prework">Common Prework</a><a href="#function-prework">Function Prework</a><a href="#readiness">Readiness</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

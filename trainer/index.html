@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trainer Hub &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Deliver the four-hour Azure API Management and API Center developer workshop with an attendee invite, timed agenda, prework checks, and lab contingencies." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="trainer">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Trainer Hub</span></nav>
+    <header class="hero"><h1>Trainer Hub</h1><p class="subtitle">Deliver a focused four-hour workshop for developers and architects, with provisioning completed before the timed path.</p><div class="badge-row"><span class="badge">Trainer materials</span><span class="badge">L300</span><span class="badge">4 hours</span></div></header>
+    <div class="layout"><main class="content">
+      <section id="invite" class="section-card reveal"><h2>Attendee Invite</h2><p>Copy this text into your invitation and add the session location and workshop link.</p><pre class="code" data-lang="text">Azure API Management for Developers
+Developer Workshop | Developers and architects | L300 | 4 hours
+
+Build an API publishing and discovery experience using Azure API Management
+and Azure API Center.
+
+You will:
+- Publish a .NET 10 Catalog API and an HTTP-triggered Azure Function.
+- Apply and test gateway policies and subscription access.
+- Publish an APIM developer portal and use a consumer subscription.
+- Register an API contract and deployment in API Center.
+
+Before the session:
+- Review the lab catalog's prework and cost notice.
+- Install Git, VS Code, PowerShell 7, .NET 10 SDK, and Azure CLI.
+- Provision classic Developer-tier APIM and wait until it is ready.
+- Prepare the HTTP Function using the documented Function prework.
+- Confirm subscription permissions, allowed regions, and quotas.
+- Use a dedicated disposable resource group and synthetic data only.
+
+The four-hour schedule assumes prework is complete.
+Azure resources can incur charges. Final cleanup is part of the workshop.
+
+Created by Walid Amro (CSA at Microsoft).</pre></section>
+      <section id="agenda" class="section-card reveal"><h2>Agenda and Timing</h2><div class="table-wrap"><table><thead><tr><th>Elapsed</th><th>Block</th><th>Minutes</th></tr></thead><tbody>
+        <tr><td>00:00-00:05</td><td><a href="../topics/overview.html">Overview</a> and readiness</td><td>5</td></tr>
+        <tr><td>00:05-00:20</td><td><a href="../labs/lab01-deploy-apim-portal.html">Lab 01</a>: deployment walkthrough / existing-instance check</td><td>15</td></tr>
+        <tr><td>00:20-01:20</td><td>Architecture, import, policies, security, lifecycle/observability</td><td>60</td></tr>
+        <tr><td>01:20-02:00</td><td><a href="../labs/lab02-import-dotnet-api-vscode.html">Lab 02</a>: .NET 10 API</td><td>40</td></tr>
+        <tr><td>02:00-02:10</td><td>Break</td><td>10</td></tr>
+        <tr><td>02:10-02:35</td><td><a href="../labs/lab03-import-functions-portal.html">Lab 03</a>: Functions</td><td>25</td></tr>
+        <tr><td>02:35-02:45</td><td><a href="../topics/developer-experience.html">Developer experience</a></td><td>10</td></tr>
+        <tr><td>02:45-03:10</td><td><a href="../labs/lab04-developer-portal-portal.html">Lab 04</a>: developer portal</td><td>25</td></tr>
+        <tr><td>03:10-03:20</td><td><a href="../topics/api-center.html">API Center</a></td><td>10</td></tr>
+        <tr><td>03:20-03:45</td><td><a href="../labs/lab05-api-center-portal.html">Lab 05</a>: inventory</td><td>25</td></tr>
+        <tr><td>03:45-04:00</td><td>Verified cleanup, recap, and questions</td><td>15</td></tr>
+      </tbody></table></div><p>Total: 240 minutes. Keep the web pager in learning-reference order; use this agenda to interleave concepts and labs during delivery.</p><p>The expanded topic pages also cover the full technical scope of the primary presentation, using actual slide visuals. Their extended reference sections are not all timed into these 240 minutes. Use the <a href="detailed-training-guide.html#source-coverage">source coverage and delivery map</a> to select follow-up reading or plan a longer session.</p><p>The ninth topic, <a href="../topics/genai-gateway.html">GenAI Gateway With APIM</a>, is an optional extension of approximately 20 additional minutes. It does not replace a timed block or add a required lab.</p></section>
+      <section id="readiness" class="section-card reveal"><h2>Delivery Readiness</h2><ul class="checklist"><li>Dry-run all cloud labs in the target subscription, region, and policy environment.</li><li>Check current UI labels, Function runtime, available App Service runtime, quotas, and expected email delivery.</li><li>Provision a separate trainer demonstration environment with synthetic data.</li><li>Verify each success and denial condition; do not count a demonstration as an attendee completing a personal deployment.</li><li>Keep a cleanup inventory for any supporting resources created outside the dedicated group.</li></ul><div class="callout warning"><strong>Important:</strong> trainer pages are linked from the public workshop. They are facilitation material, not an authenticated or confidential area. Do not add internal links, attendee data, or credentials.</div></section>
+      <section id="shortcuts" class="section-card reveal"><h2>Trainer Shortcuts</h2><ul><li><a href="detailed-training-guide.html">Detailed talk track and contingencies</a></li><li><a href="../labs/index.html#prework">Attendee prework</a></li><li><a href="../labs/lab05-api-center-portal.html#cleanup">Final cleanup checklist</a></li></ul></section>
+      <nav class="pager" aria-label="Trainer pagination"><a class="prev" href="../index.html"><small>Previous</small><strong>&larr; Home</strong></a><a class="next" href="detailed-training-guide.html"><small>Next</small><strong>Detailed Training Guide &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#invite">Attendee Invite</a><a href="#agenda">Agenda</a><a href="#readiness">Delivery Readiness</a><a href="#shortcuts">Shortcuts</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

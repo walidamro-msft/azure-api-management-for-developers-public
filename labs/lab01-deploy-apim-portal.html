@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 01: Deploy Developer SKU APIM &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Create a dedicated workshop resource group and classic Developer-tier API Management instance, then verify readiness and record its gateway endpoint." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="lab01-deploy-apim">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><a href="index.html">Labs</a><span class="sep">/</span><span>Lab 01</span></nav>
+    <header class="hero"><h1>Lab 01: Deploy Developer SKU APIM</h1><p class="subtitle">Create the gateway and management environment that every later lab reuses.</p><div class="badge-row"><span class="badge">Azure portal</span><span class="badge">L300</span><span class="badge">~15 min active + provisioning</span></div></header>
+    <div class="layout"><main class="content">
+      <section id="scenario" class="section-card reveal"><h2>Scenario and Objectives</h2><p>You need a disposable environment for publishing a Catalog API. Deploy it before the session so provisioning does not block the later labs.</p><ul><li>Create a dedicated workshop resource group.</li><li>Deploy a classic Developer-tier APIM instance.</li><li>Verify readiness and record its actual gateway URL.</li></ul><div class="callout"><strong>Related topic:</strong> <a href="../topics/architecture-and-tiers.html">Architecture and Service Tiers</a>.</div></section>
+      <section id="architecture" class="section-card reveal"><h2>Architecture</h2><div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    U[API publisher] --> P[Azure portal]
+    P --> M[APIM management]
+    M -.-> G[APIM gateway]
+    M -.-> D[Developer portal]
+    class U external
+    class P,M,G,D azure
+      </pre></div><p class="diagram-caption">Blue nodes are Azure components. Dashed arrows represent configuration; the backend is added in the next lab.</p></section>
+      <section id="prerequisites" class="section-card reveal"><h2>Prerequisites and Names</h2>
+        <ul><li>Use a non-production Azure subscription with permission to create the resources and register required providers, or have an administrator register them first.</li><li>Choose an approved APIM region and a short lowercase alphanumeric suffix. Keep the same values across all labs.</li><li>Review the <a href="index.html#prework">common prework</a> and complete this deployment before Lab 02.</li></ul>
+        <div class="table-wrap"><table><thead><tr><th>Resource or value</th><th>Name</th></tr></thead><tbody><tr><td>Dedicated resource group</td><td><code>rg-apim-workshop-&lt;suffix&gt;</code></td></tr><tr><td>APIM instance</td><td><code>apim-workshop-&lt;suffix&gt;</code></td></tr><tr><td>Pricing tier</td><td><strong>Developer</strong> (classic)</td></tr><tr><td>Region</td><td><code>&lt;approved-region&gt;</code></td></tr></tbody></table></div>
+        <div class="callout warning"><strong>Important:</strong> Developer is a paid, non-production tier with no SLA. Do not select Basic v2 just because the portal recommends it for evaluation; these labs intentionally use Developer.</div>
+      </section>
+      <section id="build" class="section-card reveal"><h2>Build</h2>
+        <h3>Step 1: Create the Instance</h3><ol>
+          <li>Sign in to the <a href="https://portal.azure.com" target="_blank" rel="noopener">Azure portal</a>.</li>
+          <li>Select <strong>Create a resource</strong>, then search for <strong>API Management</strong>.</li>
+          <li>Select <strong>Create</strong> to open the creation form.</li>
+          <li>Select your workshop subscription on <strong>Basics</strong>.</li>
+          <li>For <strong>Resource group</strong>, select <strong>Create new</strong> and enter <code>rg-apim-workshop-&lt;suffix&gt;</code>.</li>
+          <li>Enter the unique <strong>Resource name</strong>, your approved <strong>Region</strong>, an organization name, and your own <strong>Administrator email</strong>. Do not share the email or subscription details in screenshots.</li>
+          <li>Select <strong>Developer</strong> for <strong>Pricing tier</strong> and keep one unit.</li>
+          <li>Leave optional add-in monitoring services unselected for this lab. Keep public networking; do not configure a virtual network or custom domain.</li>
+          <li>Select <strong>Review + create</strong>, inspect the tier and estimated charges, then select <strong>Create</strong>.</li>
+        </ol><p><strong>Expected result:</strong> a deployment starts in your dedicated group. If you already completed prework, inspect the existing instance rather than creating a second one.</p>
+        <h3>Step 2: Wait for Readiness</h3><ol>
+          <li>Open the deployment and inspect its status. Continue concept reading while it runs; do not launch a duplicate deployment.</li>
+          <li>After deployment succeeds, open the APIM resource and wait until its provisioning status is <strong>Succeeded</strong> / online rather than activating or updating.</li>
+          <li>On <strong>Overview</strong>, copy the <strong>Gateway URL</strong> to your private workshop notes.</li>
+          <li>Open <strong>APIs</strong> &gt; <strong>APIs</strong> and confirm that the API management surface loads.</li>
+        </ol>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/get-started-create-service-instance" target="_blank" rel="noopener">Current creation steps</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-features" target="_blank" rel="noopener">tier capabilities</a>. Verified on 2026-10-16.</div>
+      </section>
+      <section id="test" class="section-card reveal"><h2>Test and Verify</h2><ul class="checklist"><li>The deployment succeeded in the dedicated resource group.</li><li>The pricing tier is Developer, not a v2 or Consumption tier.</li><li>The resource is ready and its API list opens.</li><li>You recorded the HTTPS gateway endpoint without credentials.</li></ul><p>A 404 from the gateway root is not a failed deployment: you have not published a root operation. Readiness here is the resource status and management access; test actual API calls in Lab 02.</p></section>
+      <section id="troubleshoot" class="section-card reveal"><h2>Troubleshooting</h2><div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Check</th></tr></thead><tbody><tr><td>Name unavailable</td><td>Choose another suffix before deployment; do not reuse another attendee's service.</td></tr><tr><td>Policy or permission denial</td><td>Read the deployment error and ask the subscription administrator to approve the region, tier, or provider. Do not switch to a different tier silently.</td></tr><tr><td>Provisioning still running</td><td>Inspect deployment operations. Wait or use a clearly identified demonstration environment; do not mark the personal lab complete.</td></tr><tr><td>Wrong subscription</td><td>Check the portal directory and subscription filter before creating more resources.</td></tr></tbody></table></div></section>
+      <section id="cleanup" class="section-card reveal"><h2>Cleanup and References</h2><p><strong>Continuing?</strong> Keep this instance for Labs 02-05. Charges continue while resources exist.</p><p><strong>Stopping permanently?</strong> Open <strong>Resource groups</strong>, select your exact dedicated workshop group, inspect all its resources, and choose <strong>Delete resource group</strong>. Enter its name and confirm only if every resource belongs to this workshop. Verify the group is removed. The <a href="lab05-api-center-portal.html#cleanup">final cleanup checklist</a> covers the complete environment.</p><div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/get-started-create-service-instance" target="_blank" rel="noopener">Create an API Management instance</a>.</div></section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="index.html"><small>Previous</small><strong>&larr; Labs Overview</strong></a><a class="next" href="lab02-import-dotnet-api-vscode.html"><small>Next</small><strong>Lab 02: Import a .NET 10 API &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#scenario">Scenario</a><a href="#architecture">Architecture</a><a href="#prerequisites">Prerequisites</a><a href="#build">Build</a><a href="#test">Test and Verify</a><a href="#troubleshoot">Troubleshooting</a><a href="#cleanup">Cleanup</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>

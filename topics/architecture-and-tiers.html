@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture and Service Tiers &middot; Azure API Management for Developers</title>
+  <meta name="description" content="Separate APIM management, gateway, and developer portal responsibilities, and choose service tiers by requirements rather than historical assumptions." />
+  <script>(function(){var t=localStorage.getItem("workshop-theme");document.documentElement.setAttribute("data-theme",(t==="light"||t==="dark")?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));})();</script>
+  <link rel="icon" type="image/svg+xml" href="../images/azure/10042-icon-service-API-Management-Services.svg" /><link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body data-root=".." data-active="architecture-and-tiers">
+  <div class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Home</a><span class="sep">/</span><span>Topics</span><span class="sep">/</span><span>Architecture and Service Tiers</span></nav>
+    <header class="hero"><h1>Architecture and Service Tiers</h1><p class="subtitle">Place each responsibility in the right plane and evaluate tiers against your network, availability, and developer-experience requirements.</p><div class="badge-row"><span class="badge">Architecture</span><span class="badge">~10 min core + reference</span></div></header>
+    <div class="layout"><main class="content">
+      <div class="callout"><strong>Reading path:</strong> components, tier selection, and gateway placement form the core. Platform context, resilience, scaling, and operational ownership are extended reference.</div>
+      <section id="components" class="section-card reveal"><h2>Three Components, Different Audiences</h2>
+        <div class="cheat">
+          <div class="cheat-item tone-blue"><h3>Management plane</h3><p>You configure APIs, policies, products, and subscriptions through the Azure portal, management APIs, or automation.</p></div>
+          <div class="cheat-item tone-green"><h3>Gateway</h3><p>Your consumers call this endpoint. It routes requests, executes configured policies, and emits telemetry.</p></div>
+          <div class="cheat-item tone-purple"><h3>Developer portal</h3><p>Your consumers read documentation, discover published APIs, request subscriptions, and test calls.</p></div>
+        </div>
+        <div class="diagram-wrap"><pre class="mermaid">
+flowchart LR
+    P[API publisher] --> M[Management plane]
+    M -.-> G[Gateway]
+    M -.-> D[Developer portal]
+    C[API consumer] --> D
+    C --> G
+    G --> B[Backend service]
+    class P,C external
+    class M,G,D,B azure
+        </pre></div>
+        <p class="diagram-caption">Blue nodes are platform and backend services. Dashed arrows show configuration relationships, not the API request route.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-08.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-08.png" alt="APIM management plane, developer portal, and gateways connect publishers, consumers, backends, and Azure integrations." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 8: distinguish configuration, consumer onboarding, and runtime traffic. Historical Azure AD labels refer to Microsoft Entra ID.</figcaption></figure>
+        <p>Complementary services address different concerns: Key Vault stores secrets and certificates; Azure Monitor and Application Insights provide operational evidence; Microsoft Entra ID supplies identities and tokens. Application Gateway, virtual networks, and other perimeter services address network and web-application protection. Their presence in a picture does not enable them automatically.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">APIM components and deployment models</a>.</div>
+      </section>
+      <section id="compare" class="section-card reveal"><h2>Choose Features, Not Just a Name</h2>
+        <div class="table-wrap"><table><thead><tr><th>Requirement</th><th>Design implication</th></tr></thead><tbody>
+          <tr><td>Workshop evaluation</td><td>Use classic Developer. It is non-production, has no SLA, and supports the developer portal needed here.</td></tr>
+          <tr><td>Production availability</td><td>Choose a production tier and verify its specific availability commitments; do not carry Developer assumptions into production.</td></tr>
+          <tr><td>Networking isolation</td><td>Distinguish inbound private connectivity from outbound backend access. Virtual network integration and injection are different capabilities.</td></tr>
+          <tr><td>Multi-region or self-hosted gateway</td><td>Check the current feature matrix. Classic and v2 tiers are not interchangeable feature-for-feature.</td></tr>
+          <tr><td>Developer self-service</td><td>Verify portal support and enablement. Consumption does not include the developer portal.</td></tr>
+        </tbody></table></div>
+        <p>Basic v2, Standard v2, and Premium v2 are generally available alongside classic and Consumption tiers. Choose based on the current feature and region documentation rather than a diagram from an older deck.</p>
+        <div class="callout warning"><strong>Important:</strong> the Developer tier used by these labs is not free hosting. Deployment time varies; complete provisioning as prework rather than assuming a fixed wait.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-features" target="_blank" rel="noopener">Feature comparison</a>, <a href="https://learn.microsoft.com/azure/api-management/v2-service-tiers-overview" target="_blank" rel="noopener">v2 tiers and supported-region guidance</a>, and <a href="https://learn.microsoft.com/azure/api-management/get-started-create-service-instance" target="_blank" rel="noopener">instance creation</a>. Verified on 2026-10-16.</div>
+      </section>
+      <section id="decision" class="section-card reveal"><h2>Keep the Gateway Near the Workload</h2>
+        <p>A managed gateway runs in Azure. A self-hosted gateway lets you place gateway execution in an environment you operate while managing it from APIM. You take responsibility for that gateway's hosting, networking, updates, and availability.</p>
+        <div class="takeaway"><h3>How to choose</h3><p>Start from backend reachability, latency, regulatory boundaries, and operational ownership. A public gateway does not require every backend to be public; the connectivity model and tier must support your intended route.</p></div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">Managed and self-hosted gateway responsibilities</a>.</div>
+        <p><a href="../labs/lab01-deploy-apim-portal.html">Practice in Lab 01</a>.</p>
+      </section>
+      <section id="platform-context" class="section-card reveal"><h2>Separate API Management From Application Hosting</h2>
+        <p>APIM manages the facade; your backend still runs on a hosting platform such as App Service, Functions, Kubernetes, or infrastructure outside Azure. Developer tools produce application code and management artifacts, while deployment tools configure the Azure resources. These are separate responsibilities even when a single pipeline performs them.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-09.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-09.png" alt="Application development tools feed a platform containing API Management, hosting, integration, events, and messaging." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 9: use the layers to distinguish development, hosting, and management. This historical platform view is not a current product or tier matrix.</figcaption></figure>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-06.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-06.png" alt="APIM fronts services hosted in Azure and on premises, with separate development, test, and production environments." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 6: backend location and environment separation are independent decisions. Decide which environments need separate instances and credentials.</figcaption></figure>
+        <p>Keep development, test, and production configuration explicit. Use environment-specific backend URLs, identities, and secret references, and avoid promoting developer credentials into production. See <a href="lifecycle-and-observability.html#automation">deployment automation</a> for configuration promotion.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-key-concepts" target="_blank" rel="noopener">Components and integration scenarios</a> and <a href="https://learn.microsoft.com/azure/api-management/devops-api-development-templates" target="_blank" rel="noopener">API DevOps</a>.</div>
+      </section>
+      <section id="resilience" class="section-card reveal"><h2>Distinguish Regions, Zones, and Backend Resilience</h2>
+        <p>A regional gateway close to consumers can reduce gateway latency, but a distant or unavailable backend can still dominate the request. Choose supported regions using current availability guidance and consider data location, backend reachability, and your recovery objectives together.</p>
+        <p>In the documented classic Premium multi-region model, gateways run in additional regions while the management plane and developer portal remain in the primary region. Secondary gateways can continue with their latest configuration if the primary region fails; that does not make the portal or management endpoint region-independent.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-42.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-42.png" alt="Primary and secondary APIM regions share configuration while hosting regional gateway endpoints." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 42: this topology illustrates the classic Premium multi-region model, not Developer or an assumed Premium v2 feature.</figcaption></figure>
+        <div class="table-wrap"><table><thead><tr><th>Decision</th><th>What to account for</th></tr></thead><tbody>
+          <tr><td>Regional routing</td><td>Public traffic routing can select a low-latency available gateway; internal VNet deployments require your routing solution. Regional endpoints allow explicit routing choices.</td></tr>
+          <tr><td>Regional state</td><td>Rate-limit counters and built-in caches are regional. Do not assume a global counter or shared cached response.</td></tr>
+          <tr><td>Availability zones</td><td>Separate failure domains within a region; they do not replace a cross-region recovery strategy.</td></tr>
+          <tr><td>Backend availability</td><td>Design backend capacity, identity, connectivity, and failover separately from gateway availability.</td></tr>
+        </tbody></table></div>
+        <p>Zone configuration differs by tier. Current guidance covers classic Premium, Standard v2, and Premium v2: classic Premium supports automatic or manual configuration, while zone redundancy for the documented v2 tiers is selected at creation. Verify region support and deployment constraints before provisioning rather than repeating the deck's old zone or SLA rules.</p>
+        <div class="callout warning"><strong>Important:</strong> additional regions and units increase cost. Availability commitments depend on the actual tier and configuration; none applies to the Developer-tier lab as a production SLA.</div>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-deploy-multi-region" target="_blank" rel="noopener">Multi-region behavior and routing</a>, <a href="https://learn.microsoft.com/azure/api-management/enable-availability-zone-support" target="_blank" rel="noopener">current zone configuration</a>, and <a href="https://learn.microsoft.com/azure/api-management/v2-service-tiers-overview" target="_blank" rel="noopener">v2 region guidance</a>. Verified on 2026-10-16.</div>
+      </section>
+      <section id="scaling" class="section-card reveal"><h2>Plan Capacity and Scaling</h2>
+        <p>Scaling gateway capacity does not scale the backend or remove an expensive policy. Measure request volume, latency, failures, and gateway resource pressure before deciding whether to add capacity, change policy work, cache responses, or improve the backend.</p>
+        <p>Manual scaling and autoscaling depend on the tier and deployment model. Classic gateway capacity metrics and v2 CPU/memory metrics are not interchangeable. Account for scale-operation time, configured minimums, cost, and enough remaining capacity during maintenance or a failure.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/upgrade-and-scale" target="_blank" rel="noopener">Upgrade and scale APIM</a> and <a href="https://learn.microsoft.com/azure/api-management/api-management-howto-use-azure-monitor" target="_blank" rel="noopener">gateway metrics and alerting</a>.</div>
+      </section>
+      <section id="self-hosted" class="section-card reveal"><h2>Own the Self-Hosted Runtime</h2>
+        <p>The self-hosted gateway is a Linux container that can run near on-premises or other-cloud backends. Kubernetes, including Azure Arc-enabled Kubernetes, is one deployment option. Configuration remains associated with an APIM instance in Azure; runtime placement is not the same as moving the entire APIM service.</p>
+        <p>The gateway needs outbound connectivity to its required Azure endpoints for configuration and configured telemetry. Plan for disconnection, local configuration recovery, monitoring, and upgrades. Feature and policy support differs from the managed gateway; "functionally equivalent" is not a safe blanket assumption.</p>
+        <figure class="media-panel"><a href="../images/deck/apim-introduction-slide-45.png" target="_blank" rel="noopener"><img src="../images/deck/apim-introduction-slide-45.png" alt="Microsoft owns the managed service while customers own self-hosted gateway hosting, networking, capacity, and updates." width="1600" height="900" loading="lazy" /></a><figcaption>Source presentation, slide 45: identify who operates each component. The managed-service SLA reference does not promise an SLA for Developer or for your self-hosted infrastructure.</figcaption></figure>
+        <p>You operate container hosting, network configuration, capacity, uptime, image updates, and support diagnostics. Microsoft maintains the service and gateway software. Pin and test gateway versions for production rather than allowing an unreviewed rolling image tag to change your runtime.</p>
+        <div class="callout learn"><strong>Learn more:</strong> <a href="https://learn.microsoft.com/azure/api-management/self-hosted-gateway-overview" target="_blank" rel="noopener">Self-hosted architecture, connectivity, versioning, and gateway comparison</a>.</div>
+      </section>
+      <nav class="pager" aria-label="Workshop pagination"><a class="prev" href="overview.html"><small>Previous</small><strong>&larr; Overview</strong></a><a class="next" href="api-design-and-import.html"><small>Next</small><strong>API Design and Import &rarr;</strong></a></nav>
+    </main><aside class="toc" aria-label="Table of contents"><h3>On This Page</h3><a href="#components">Components</a><a href="#compare">Service Tiers</a><a href="#decision">Gateway Placement</a><a href="#platform-context">Platform and Environments</a><a href="#resilience">Regions and Zones</a><a href="#scaling">Capacity and Scaling</a><a href="#self-hosted">Self-Hosted Ownership</a></aside></div>
+  </div><script type="module" src="../assets/site.js"></script>
+</body>
+</html>
